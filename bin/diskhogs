@@ -1,0 +1,25 @@
+#!/bin/sh
+# Stolen from an informit article of Dave Taylor with some modifications.
+
+BASE="${1:-.}"
+
+if [ ! -d "$BASE" ]; then
+	echo >&2 "No such directory '$BASE'!"
+	exit 1
+fi
+
+echo "Disk Hogs Report for Directory '$BASE'"
+echo
+
+bigdirs="$(du -s "$BASE"/* | sed 's/ /_/g' | sort -rn | cut -f2- | head -5)"
+
+echo "The Five biggest directories are (in order):" $bigdirs
+
+for d in $bigdirs ; do
+	echo
+	echo The four largest files int the big directory: $d
+	find "$(echo $d | sed 's/_/ /g')" -type f -ls | \
+		awk '{ print $7" "$11 }' | sort -rn | head -4
+done
+
+exit 0

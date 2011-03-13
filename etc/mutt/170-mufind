@@ -1,0 +1,2 @@
+macro index S "<shell-escape>rm -rf ~/.mu/results; mu-find -o l -l ~/.mu/results " "mu-find"
+macro index <F3> "<change-folder-readonly>~/.mu/results<return><limit>~A<return>" "display mu-find results"

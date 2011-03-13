@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Verilen isimde öksüz (orphan) dal oluştur
+
+set -e
+
+if [ -n "$1" ]; then
+	git symbolic-ref HEAD refs/heads/"$1"
+	rm -f .git/index
+	git clean -fdx
+fi

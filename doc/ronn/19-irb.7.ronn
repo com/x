@@ -1,0 +1,59 @@
+# Irb Kılavuzu
+
+## AÇIKLAMA
+
+"Etkileşimli Ruby" (**i**nteractive **r**u**b**y) anlamına gelen `irb` ile Ruby
+kod denemeleri yapabilirsiniz.
+
+## ÖRNEKLER
+
+        o                       "o" nesnesini görüntüle
+        o.m                     "o" nesnesini metodlarla birlikte görüntüle
+        o.see                   "o" nesnesini grafik ortamda görselleştir
+        o.ri :metod             "o" nesnesinde ':metod' dokümanını görüntüle
+        o.interesting_methods   "o" nesnesindeki metodları özet olarak görüntüle
+
+        ri "C#m"                "C" sınıfındaki "m" metoduna ait dokümanı görüntüle
+
+        Clipboard.copy          Seçileni panoya kopyala
+        Clipboard.paste         Panodan yapıştır
+
+        _                       Bir önceki ifadenin ürettiği sonuç
+        var = _                 'var' değişkenine bir önceki ifadenin sonucunu ata
+
+        quick       { ... }     Bloğun ortalama çalışma süresini (100 yinelemeyle) ölç
+        quick(1000) { ... }     Bloğun ortalama çalışma süresini 1000 yinelemeyle ölç
+
+        irb                     Yeni oturum aç
+        jobs                    Oturumları listele
+        fg 2                    2 numaralı oturuma geç
+        exit                    Oturumu kapat  (Ctrl-D tuşu da kullanılabilir)
+        reset!                  Çalışma ortamını sıfırla
+        clear                   Ekranı temizle  (Ctrl-L tuşu da kullanılabilir)
+
+        e                       Son düzenlenen dosyayı aç
+        e :b                    "b" referanslı dosyayı, son düzenlenen değişmeden aç
+        e!                      Yeni dosya aç
+        e! :b                   "b" referanslı dosyayı aç ve son düzenlenen olarak ata
+        e?                      Düzenlenecek dosyayı seç
+        ed                      Geçici bir dosya aç
+
+## YAPILANDIRMA
+
+Yapılandırma dosyaları `etc/irb` dizinindedir.
+
+## TELİF HAKKI
+
+Copyright (C) 2011 19 tayfası <http://ondokuz.biz/>
+
+## BAKINIZ
+
+Bu kılavuzda **19/x** kapsamında yapılan düzenlemeler özetlenmektedir.
+Programla ilgili daha ayrıntılı bilgi için lütfen aşağıdaki kaynaklara bakın.
+
+irb(1)
+
+**19/x** yapılandırma sistemi hakkında genel bilgi almak için lütfen şu
+kaynaklara bakın.
+
+19-x(7)

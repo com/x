@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ -f ~/.x ]; then
+	. ~/.x
+elif [ -f ~/lib/x ]; then
+	. ~/lib/x
+else
+	echo >&2 "Sistem ilklendirilemiyor."
+	exit 1
+fi

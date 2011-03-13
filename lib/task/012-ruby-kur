@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# XXX "Günü kurtaran" bir Ruby kurulumu.  Gelecek Debian sürümlerinde buna
+# ihtiyaç olmayacaktır.
+
+# Hafif ortamlarda kurulum yapma.
+anyattr base && skiptask "baz sistem"
+
+sudoattempt
+
+# bir nedenle sistemde bulunan alternatif artıklarını elle sil
+for p in ruby gem ri erb testrb rdoc; do
+	say "$p sistem alternatifleri (varsa) silinecek..."
+	sudo update-alternatives remove-all $p >/dev/null 2>&1 ||:
+done
+
+if [ -z "$HAS_APT_UPDATED" ]; then
+	say "Paket indeksleri güncelleniyor..."
+	xaptitude update ||:
+fi
+
+# ruby1.8 için rake ve gem'i kurmuyoruz
+xaptitude install ruby1.9.1-full ruby1.8 ruby1.8-dev build-essential
+
+say "Ruby 1.8 sistem alternatifleri kuruluyor..."
+sudo update-alternatives --install /usr/bin/ruby ruby /usr/bin/ruby1.8 400 \
+	--slave   /usr/share/man/man1/ruby.1.gz ruby.1.gz \
+				/usr/share/man/man1/ruby1.8.1.gz \
+	--slave   /usr/share/man/man1/erb.1.gz erb.1.gz \
+				/usr/share/man/man1/erb1.8.1.gz \
+	--slave   /usr/share/man/man1/gem.1.gz gem.1.gz \
+				/usr/share/man/man1/gem1.8.1.gz \
+	--slave   /usr/share/man/man1/irb.1.gz irb.1.gz \
+				/usr/share/man/man1/irb1.8.1.gz \
+	--slave   /usr/share/man/man1/ri.1.gz ri.1.gz \
+				/usr/share/man/man1/ri1.8.1.gz \
+	--slave   /usr/share/man/man1/rdoc.1.gz rdoc.1.gz \
+				/usr/share/man/man1/rdoc1.8.1.gz \
+	--slave   /usr/share/man/man1/testrb.1.gz testrb.1.gz \
+				/usr/share/man/man1/testrb1.8.1.gz \
+	--slave   /usr/bin/erb erb /usr/bin/erb1.8 \
+	--slave   /usr/bin/gem gem /usr/bin/gem1.8 \
+	--slave   /usr/bin/irb irb /usr/bin/irb1.8 \
+	--slave   /usr/bin/rdoc rdoc /usr/bin/rdoc1.8 \
+	--slave   /usr/bin/ri ri /usr/bin/ri1.8 \
+	--slave   /usr/bin/testrb testrb /usr/bin/testrb1.8 \
+	>/dev/null 2>&1 ||: # hatasız ve sessiz
+
+say "Ruby 1.9 sistem alternatifleri kuruluyor..." # öntanımlı
+sudo update-alternatives --install /usr/bin/ruby ruby /usr/bin/ruby1.9.1 500 \
+	--slave   /usr/share/man/man1/ruby.1.gz ruby.1.gz \
+				/usr/share/man/man1/ruby1.9.1.1.gz \
+	--slave   /usr/share/man/man1/erb.1.gz erb.1.gz \
+				/usr/share/man/man1/erb1.9.1.1.gz \
+	--slave   /usr/share/man/man1/gem.1.gz gem.1.gz \
+				/usr/share/man/man1/gem1.9.1.1.gz \
+	--slave   /usr/share/man/man1/irb.1.gz irb.1.gz \
+				/usr/share/man/man1/irb1.9.1.1.gz \
+	--slave   /usr/share/man/man1/ri.1.gz ri.1.gz \
+				/usr/share/man/man1/ri1.9.1.1.gz \
+	--slave   /usr/share/man/man1/rdoc.1.gz rdoc.1.gz \
+				/usr/share/man/man1/rdoc1.9.1.1.gz \
+	--slave   /usr/share/man/man1/testrb.1.gz testrb.1.gz \
+				/usr/share/man/man1/testrb1.9.1.1.gz \
+	--slave   /usr/bin/erb erb /usr/bin/erb1.9.1 \
+	--slave   /usr/bin/gem gem /usr/bin/gem1.9.1 \
+	--slave   /usr/bin/irb irb /usr/bin/irb1.9.1 \
+	--slave   /usr/bin/rdoc rdoc /usr/bin/rdoc1.9.1 \
+	--slave   /usr/bin/ri ri /usr/bin/ri1.9.1 \
+	--slave   /usr/bin/testrb testrb /usr/bin/testrb1.9.1 \
+	>/dev/null 2>&1 ||: # hatasız ve sessiz

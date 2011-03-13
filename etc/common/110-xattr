@@ -1,0 +1,51 @@
+# Makine niteliklerini belirle.  Makine nitelikleri değişkeni ':' ile ayrılmış
+# bir dizi nitelik etiketinden oluşan (başında ve sonunda da ':' içeren) bir
+# ortam değişkenidir.  Bu ortam değişkeni kabuğa giriş yapıldıktan sonra son
+# aşamada çalıştırılacak programların belirlenmesi başta olmak üzere çeşitli
+# kararların alınmasında kullanılır.
+#
+# Değişkenin dikkate alındığı yer(ler):
+#
+#	tmux başta olmak üzere her yer
+#
+# Örneğin tmux bu değişkene bakarak ~/.tmux altındaki profillerden seçim yapar.
+#
+
+# Grafik ortam varsa bu bir masaüstü
+if [ -x /usr/bin/X ] || {
+	[ -x /usr/sbin/laptop-detect ] && /usr/sbin/laptop-detect
+}; then
+	setattr gui
+# SSH veya Web sunucusu kurulu ise sunucu
+elif [ -x /usr/sbin/nginx ] || [ -x /usr/sbin/apache2 ] ||
+     [ -x /usr/sbin/lighttpd ]; then
+	setattr server
+fi
+
+# Proxmox sunucu?
+if [ -x /usr/bin/pveversion ]; then
+	setattr base
+fi
+
+case "$([ -x /usr/bin/tty ] && tty 2>/dev/null ||:)" in
+tty[0-9]|vc/[0-9]|console) setattr dumb ;;
+esac
+
+# Öğrenci labındaysak bu bir tc (Thin Client)
+case "$(/usr/bin/lsb_release -s -i 2>/dev/null ||:)" in
+*[Dd]ebian[Ee]du*|*[Ss]kole[Ll]inux*|*[Ee]dubuntu*)
+	setattr tc
+	;;
+esac
+
+# Nerede çokluk orada yokluk.  Bu makinede 7'den fazla kullanıcı varsa güvensiz.
+# Neden 7?  Bilmiyorum...  İhtiyaca göre artırılabilir.
+set -- $(echo $HOME/../* 2>/dev/null ||:)
+if [ $# -gt 7 ]; then
+	setattr unsafe
+fi
+
+# SSH ile bağlandığımız makineler daima "ssh"
+if [ -n "$SSH_CLIENT" ]; then
+	setattr ssh
+fi

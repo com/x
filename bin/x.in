@@ -1,0 +1,841 @@
+#!/bin/bash
+#
+# DİKKAT!  BU BETİK OTOMATİK OLARAK ÜRETİLMİŞTİR; LÜTFEN DÜZENLEMEYİN!
+#
+# 19 önyükleme (boot) betiği → wget ondokuz.biz/x -qO-| bash
+#
+# Otomatik olarak belirlenemezse GitHub kullanıcı hesabı sorulur.
+#
+# 	wget ondokuz.biz/x -qO-| bash [sonra]
+#
+# DİKKAT!  Bu betiği çalıştırmadan önce kişisel GitHub hesabınızda şu depodan
+# çoğaltarak (fork) elde edeceğiniz "x" isimli bir deponuz olmalıdır:
+#
+# 	https://github.com/00010011/x
+
+set -e
+
+# API ihracı için Bash gerekiyor.
+if [ -z "$BASH" ]; then
+	printf >&2 "Lütfen bu programı Bash ile çalıştırın.  Örneğin:\n\n"
+	printf >&2 "\twget x.ondokuz.biz -qO- | bash\n"
+	exit 1
+fi
+
+# ==============================================================================
+# Sabiteler
+# ==============================================================================
+
+# hangi dizine kurulum yapılacak?
+readonly DESTDIR=$HOME
+
+# program ismi
+readonly PROGNAME='kur'
+# x kitaplığı
+readonly LIBFILE='lib/x'
+# x yapılandırma dosyası
+readonly XRCFILE='.x'
+# x sürücü dizini
+readonly XRCDIR='etc/xrc'
+# yeni kurulumlarda hangi dokümanı okutacağız?
+readonly MANFILE='doc/man/man7/19-x.7'
+# kılavuz
+readonly MANUAL='19-x'
+# gizli dosyaların konulacağı dizin
+readonly PRIVATEDIR='.private'
+# gizli sayılması gereken dizinler
+readonly PRIVATEDIRS="$PRIVATEDIR .ssh .gnupg Mail"
+# depo adı
+readonly REPOSITORY='x'
+# depo ilklenirken kullanılacak commit mesajı
+readonly REPOSITORY_INITIATED_MESSAGE='ilk'
+# inek (size demedim)
+readonly COWFILE='doc/images/19x.png'
+
+# Bu paketler en başta gerekiyor.
+readonly DEB_CORE="
+aptitude
+curl
+git
+pdmenu
+"
+
+# ==============================================================================
+# Yardımcılar
+# ==============================================================================
+
+### core.sh
+
+### std.sh
+
+### package.sh
+
+### string.sh
+
+### git.sh
+
+### meta.sh
+
+### net.sh
+
+### misc.sh
+
+# ==============================================================================
+# Bilinen sorunlar için küçük bir API
+# ==============================================================================
+
+# sorunu raporla
+knownproblem() {
+	message_ "${CO_XGREY}Sorun: ${*}${CO_NORMAL}"
+}
+
+# sorun zaten yoksa raporla
+noproblem() {
+	message_ "${CO_XGREY}Sorun yok.${CO_NORMAL}"
+	exit 0
+}
+
+# sorun düzeltilmişse raporla
+fixedproblem() {
+	message_ "${CO_GOOD}Sorun düzeltildi.${CO_NORMAL}"
+}
+
+# sorunlu debian paketini yeni sürüme yükselt
+updateproblematicpackage() {
+	local package version problem
+
+	package="$1"
+	version="$2"
+	problem="$3"
+
+	hasdeb "$package" || noproblem
+	knownproblem "$problem"
+	install-newer-deb "$package" "$version" && fixedproblem
+}
+
+# ==============================================================================
+# Ana işlevler
+# ==============================================================================
+
+# "workaround" ne anlama geliyor, buyurun örneği (maliyetli bir işlem)
+ensure_visible_colors() {
+	local terminal notok
+
+	# Bu yoksa yapılabilecek bir şey de yok.
+	hascommand setterm || return 0
+
+	terminal=$(
+		ps -p $(
+			ps -p $(
+				# bu prosesi çağıran kabuk prosesin numarası?
+				ps -p $$ -o ppid=
+			) -o ppid=
+			# o kabuk prosesi hangi numaralı proses çalıştırdı?
+		) -o cmd=
+		# numarasını verdiğimiz prosesi oluşturan komut?
+	)
+
+	case "$terminal" in
+	# sorunlu terminaller
+	*gnome-terminal) ;;
+	# diğerlerini geç
+	*) return 0
+	esac
+
+	case "$DISTRO" in
+	[Uu]buntu)
+		notok=0 # hayır
+		;;
+	[Dd]ebian)
+		notok=1 # kesin
+		;;
+	*)
+		notok=2 # belki
+		message "Uçbirim renkleri ayarlanacak..."
+		;;
+	esac
+
+	if [ $notok -gt 0 ]; then
+		local brightwhite normal default
+
+		brightwhite='\033[37;01m'
+		normal='\033[0m'
+		default=h
+
+		if [ $notok -gt 1 ]; then
+			default=e
+		fi
+		message "-->${brightwhite}test test test${normal}<--"
+		if ! yesno "Yukarıda oklar arasındaki yazıyı net okuyabiliyor musunuz?" $default; then
+			setterm -term linux -inversescreen on 2>/dev/null ||:
+			if ! yesno "Negatif uçbirim renkleriyle devam edilecek?" y; then
+				setterm -term linux -inversescreen off \
+					2>/dev/null ||:
+				message "İsteğiniz üzerine kuruluma son" \
+				        "verildi.  Lütfen tekrar deneyin."
+				exit 1
+
+			fi
+			return 1
+		fi
+	fi
+
+	return 0
+}
+
+# kur işlev ve değişkenlerini ihraç et
+exportapi() {
+	X_REPOSITORY=${X:=$HOME}
+
+	# değişkenler
+	export DISTRO IS_NEWINSTALL TASKSEL TASKLIB HAS_APT_UPDATED DEBUG \
+	       VERBOSE STAGINGDIR BACKUPDIR PRIVATEDIR XRCFILE X_REPOSITORY \
+	       X_ATTR X_EMAIL X_NAME GITHUB_USER GITHUB_TOKEN
+
+
+	# işlevler
+	exportmostf
+}
+
+# kurulum görevini atla
+skiptask() {
+	# Görev seçici çalıştırılmışsa görevi atlama.
+	[ -z "$TASKSEL" ] || return 0
+	message_ "${CO_XPINK}Görev atlandı: $*${CO_NORMAL}"
+	exit 0
+}
+
+# görevleri dosya|başlık biçiminde listele
+taskitems() {
+	local prefix path p task title
+
+	[ -n "$TASKLIB" ] || bug "TASKLIB tanımlı değil"
+	[ -n "$1" ] || bug "Görev dosyası öneki tanımlanmamış"
+
+	prefix="$1"
+
+	IFS=:
+	path=($TASKLIB)
+	unset IFS
+
+	# Aynı isimde görevleri belirlemek için denetim tablosu.
+	declare -A seen
+
+	for p in ${path[@]}; do
+		for task in $(ls ${p}/${prefix}* 2>/dev/null ||:); do
+			case "$task" in
+			*\|*) bug "Hatalı görev dosyası adı: $task" ;;
+			esac
+			title="${task##*/}"
+			title="${title#*-}"
+			title="${title//-/ }"
+			if [ -z "${seen[${title}]}" ]; then
+				# Anahtar olarak dosya başlığını kullan.
+				seen["${title}"]=yes
+				title=$(titlecase $title)
+				echo "${task}|${title}"
+			fi
+		done
+	done
+}
+
+# görev dosyasını çalıştır
+execline() {
+	local task shebang interpreter
+
+	task="$1"
+
+	if [ -x "$task" ]; then
+		echo "'$task'"
+	else
+		shebang=$(head -n 1 "$task")
+		case "$shebang" in
+		\#!)   interpreter=${shebang##\#!}  ;;
+		\#\ !) interpreter=${shebang##\# !} ;;
+		*)     interpreter=/bin/bash        ;;
+		esac
+		echo "$interpreter '$task'"
+	fi
+}
+
+# görev dosyası ve başlığına uygun pdmenu satırını üret
+taskmenuitem() {
+	local task title key flag
+
+	task="$1"
+	title="$2"
+	key="$3"
+	flag="$4"
+
+	[ -z "$key"  ] || key="_${key} "
+	[ -n "$flag" ] || flag="pause"
+
+	echo exec:${key}${title}:${flag}:$(execline "$task")
+}
+
+# kurulum görevini tanıt
+taskintroduce() {
+	message_ "${CO_XBLUE}${*}${CO_NORMAL}"
+}
+
+# görev dosyasını görevi tanıtarak çalıştır
+taskinvoke() {
+	local task title
+
+	task="$1"
+	title="$2"
+	shift 2
+	args="$@"
+
+	taskintroduce $title
+	execl=$(execline "$task")
+	verbose "===> ${execl}"
+	eval $execl $args || cry "${task} görevi hatayla sonlandı."
+}
+
+# dosya|başlık satırını ayrıştırarak verilen işlevi çalıştır
+dotask() {
+	local taskline callback
+
+	taskline="$1"
+	callback="$2"
+	shift 2
+	args="$@"
+
+	ifssave=$IFS
+	IFS='|'
+	set -- $taskline
+	task="$1"
+	title="$2"
+	IFS="$ifssave"
+
+	$callback "$task" "$title" $args
+}
+
+# dinamik olarak pdmenu menüsü oluştur
+makemenu() {
+	local category num item
+
+	category="$1"
+
+	num=97 # 'a' harfi
+	taskitems "$category" |
+	while read item; do
+		key=$(printf \\$(printf '%03o' $num))
+		dotask "$item" taskmenuitem "$key"
+		num=$(($num + 1))
+	done
+}
+
+# görev menüsü
+taskmenu() {
+	local last
+
+	last=$(git log -n1 --format='%h' --merges 2>/dev/null ||:)
+	[ -n "$last" ] || last="0"
+
+	_makegrp() {
+		cat <<-EOF
+		group:$1
+			exec::makemenu:\
+				echo "menu:$2:$3:$4"; \
+				bash -c 'makemenu $5'; \
+				echo "nop"; \
+				echo "exit:_Başa dön"
+			show:::$2
+			remove:::$2
+		endgroup
+		EOF
+	}
+
+	exportapi; {
+		cat <<-EOF
+		title:19/x - ${last}
+		menu:main:Görevler:© 2011 Recai Oktaş <roktas@debian.org>
+		EOF
+
+		_makegrp "_Kurulum Görevleri" \
+			 "installation" \
+		         "Kurulum Görevleri" \
+		         "İlk kurulumda çalıştırılmış görevler" \
+			 0
+		_makegrp "_Genel Görevler" \
+			 "general" \
+		         "Genel Görevler" \
+		         "Genel amaçlı görevler" \
+			 1
+		if isprivileged; then
+			_makegrp "_Yönetim Görevleri" \
+			         "administration" \
+			         "Yönetim Görevleri" \
+			         "Yönetici izini gerektiren görevler" \
+			         2
+		fi
+		_makegrp "_Bilinen Sorunlar" \
+			 "hack" \
+		         "Bilinen Sorunlar" \
+		         "Bilinen sorunları düzeltmeye yönelik görevler" \
+			 7
+		echo "nop"
+		_makegrp "_Depo İşlemleri" \
+			 "repository" \
+		         "Depo İşlemleri" \
+		         "19/x deposuyla ilgili işlemler" \
+			 9
+		echo "exec:Yardım (F1)::x-tmux-man 19-x"
+		echo "exit:Çıkış (q veya Esc)"
+	} | pdmenu - --color
+}
+
+# kurulum görevlerinin (0 ve 7 kategorileri) tümünü çalıştır
+taskrun07() {
+	local categories category
+
+	categories="0"
+
+	# baz ve sunucu kurulumlarında elle müdahale
+	anyattr base server || categories="$categories 7"
+
+	exportapi
+
+	for category in $categories; do
+		taskitems "$category" |
+		while read item; do
+			dotask "$item" taskinvoke
+		done
+	done
+}
+
+# ilklendirme dosyalarını depo köküne çek
+installrc() {
+	local rcdir
+
+	rcdir=$1
+
+	# skel dizinindekiler olduğu gibi
+	cp -a "${rcdir}/skel/." .
+
+	# diğerlerini sembolik olarak bağla
+	perl -e '
+		use strict;
+		use warnings;
+
+		use File::Find;
+		use File::Spec;
+		use File::Basename;
+
+		my $rcdir = $ARGV[0];
+
+		my @files;
+		find({
+			no_chdir => 1,
+			wanted => sub {
+				return if -d $_;
+				# Şablon dizinindekileri atla
+				return if m!^\E${rcdir}\Q/skel/!x;
+				push @files, $_;
+			},
+		}, $rcdir);
+
+		for my $file (@files) {
+			my $target = File::Spec->abs2rel($file, $rcdir);
+			my $mode =
+			    sprintf "%04o", (stat(dirname($file)))[2] & 07777;
+			my $directory = dirname($target);
+			my $relsource = File::Spec->abs2rel($file, $directory);
+			system("install", "-d", "-m", $mode, $directory);
+			system("ln", "-sf", $relsource, $target);
+		}
+	' "$rcdir"
+}
+
+# esas oğlan
+go() {
+	local f d moo
+
+	# ---------------------------------------------------------------------
+	# Ön kurulum
+	# ---------------------------------------------------------------------
+
+	# Gerekli paketleri kontrol et, bir nedenle kuramazsak devam etme.
+	# XXX Bu denetimi paket adıyla program adının aynı olması varsayımı
+	# altında programın varlığına bakarak yapıyoruz.  dpkg-query yoluyla
+	# bir paketin kurulu olup olmadığını denetlemek çok maliyetli.
+	local p missing
+	for p in $DEB_CORE; do
+		if ! hascommand "$p"; then
+			missing="$missing $p"
+		fi
+	done
+	if [ -n "$missing" ]; then
+		say "'$(echo $missing)' paket(ler)i kurulu değil. " \
+		    "Önce bunlar kurulacak."
+
+		say "Paket indeksleri güncelleniyor..."
+		sudoattempt
+		xaptget update ||:
+		HAS_APT_UPDATED=yes
+
+		xaptget install $missing
+
+		# Kurulum için bize gereken tüm paketler artık kurulmuş olmalı.
+	fi
+
+	# Bu betik kurulum sonrasında da çalıştırılabilir.
+	if [ -n "$X" ]; then
+		case "$0" in
+		""|bash|*/bash)
+			if ! yesno "Yeni baştan kurulum mu yapmak istiyorsunuz?" e; then
+				TASKSEL=yes
+			fi
+			;;
+		*)
+			TASKSEL=yes
+			;;
+		esac
+	fi
+	readonly TASKSEL
+
+	# Sadece kurulum görevleri isteniyor.
+	if [ -n "$TASKSEL" ]; then
+		cd "$DESTDIR"
+		readonly STAGINGDIR="$DESTDIR"
+		taskmenu
+		exit $?
+	fi
+
+	if [ -d "${DESTDIR}/.git" ]; then
+		say "Kurulum dizini '$DESTDIR'da zaten" \
+		     "bir Git deposu (eski bir kurulum?) var."
+		if ! yesno "Kuruluma devam edilsin mi (hedef dosyalar yedeklenecek)?" h; then
+			say "Kurulumdan çıkıldı."
+			exit 0
+		fi
+	fi
+
+	# ---------------------------------------------------------------------
+	# GitHub bilgisi topla
+	# ---------------------------------------------------------------------
+
+	if [ -z "$GITHUB_USER" ]; then
+		while :; do
+			local user
+			ask "GitHub hesap adınız?" "$USER"
+			user="$REPLY"
+			if ! gh_http -u "$user" 'user/show/%s'; then
+				cry "'$user' adında bir GitHub hesabı yok"
+				if yesno "Tekrar denemek ister misiniz?"; then
+					continue
+				else
+					die "Lütfen bir GitHub hesabı açın ve" \
+					    "tekrar deneyin."
+				fi
+			fi
+			GITHUB_USER="$user"
+			break
+		done
+	fi
+
+	# Kısa bir rapor.
+	say "GitHub hesabı olarak '$GITHUB_USER' kullanılacak."
+
+	# ---------------------------------------------------------------------
+	# Depoyu ara dizine klonla
+	# ---------------------------------------------------------------------
+
+	# Mevcut bilgilere göre hedef deponun varlığını kontrol et.
+	if ! gh_http "repos/show/%s/$REPOSITORY" 2>/dev/null || [ -z "$REPLY" ]; then
+		die "Hesabınızda '$REPOSITORY' isimli bir depo mevcut değil. " \
+		    "Lütfen önce bu depoyu çoğaltarak oluşturun."
+	fi
+
+	local parent
+	parent=$(echo "$REPLY" | sed -ne 's/\s\+:parent:\s\+//p' 2>/dev/null)
+	if [ -z "$parent" ]; then
+		die "Hesabınızda bulunan '$REPOSITORY' deposu çoğaltılmış" \
+		    "(fork edilmiş) bir depo değil."
+	fi
+
+	# Şimdilik bir ara dizine klonla, salt okunur olarak (git:// şeması).
+	usetempdir STAGINGDIR # bir nedenle hata olursa bu dizin çıkışta silinir
+	if ! git clone \
+		"git://github.com/${GITHUB_USER}/${REPOSITORY}" \
+		"$STAGINGDIR"; then
+		die "Depo klonlama başarısız. " \
+		    "Geçici bir sorun olabilir, lütfen tekrar deneyin."
+	fi
+
+	# XXX Geçici dizindeyiz
+	cd "$STAGINGDIR"
+
+	# Doğru depo mu geldi?  Basit denetim.
+	[ -f "$LIBFILE" ] ||
+		die "Klonlanan depoda '$LIBFILE' dosyası yok. " \
+		    "Doğru depoyu çoğalttığınıza emin misiniz?"
+
+	# 19/x ortamını ilkle.
+	X_HOME=$PWD . "$LIBFILE" || cry "$LIBFILE dosyasında sorun var; devam edilecek."
+
+	# Bu depo acaba daha önce (bir başka kurulumda) ilklenmiş mi?
+	# Ana yapılandırma dosyası depo kökünde ise evet.
+	[ -f "$XRCFILE" ] || IS_NEWINSTALL=yes
+	readonly IS_NEWINSTALL
+
+	# ---------------------------------------------------------------------
+	# Yeni kurulum
+	# ---------------------------------------------------------------------
+
+	# Bu yeni bir kurulum ise yapılacak işler var.
+	if [ -n "$IS_NEWINSTALL" ]; then
+		if anyattr base server; then
+			die "Kısıtlı kullanıcı ortamına sahip bir makinede" \
+			    "örneğin bir sunucu) yeni kurulum yapmaya" \
+			    "çalışıyorsunuz.  Lütfen yeni kurulumu daha uygun" \
+			    "bir makinede (örneğin bir masaüstü" \
+		            "makine) yapın."
+		fi
+
+		if ! gh_writable; then
+			say "Bu bir ilk kurulum olduğundan ana depoya" \
+			    "yazabilmeniz, yani GitHub hesabınıza bu" \
+			    "makineden SSH erişimi yapabilmeniz" \
+			    "gerekiyor.  Fakat yapılan kontrole göre şu an" \
+			    "bu erişimin gerçekleştirilemediği görülüyor. "\
+			    "Bu eğer geçici bir sorun değilse bu makine için" \
+			    "ssh-keygen'le anahtar üretmeniz ve ortak anahtar" \
+			    "dosya içeriğini (~/.ssh/id_rsa.pub dosyası)" \
+			    "hesabınıza kaydetmeniz gerekiyor.  Lütfen bu" \
+			    "konuyla ilgili olarak şu dokümanı okuyun," \
+			    "uygulayın ve tekrar deneyin." \
+		             "\n\n\thttp://help.github.com/linux-key-setup/\n\n"
+			die "Kurulum sonlandırıldı."
+		fi
+
+		# rc dosyalarını depo köküne çek
+		installrc "$XRCDIR"
+
+		# Tepe seviyedekiler dışındaki her şeyi göz ardı et
+		echo '/*' >.gitignore
+		git add -f .gitignore
+
+		for f in $(ls -A "."); do
+			# Özel dizin de göz ardı edilmeli
+			if ! has "$f" $PRIVATEDIRS; then
+				echo "!/${f}" >>.gitignore
+			fi
+		done
+
+		# Şimdi depoya ekle
+		git add .
+	fi
+
+	# ---------------------------------------------------------------------
+	# Depo referanslarını ayarla.
+	# ---------------------------------------------------------------------
+
+	local is_rw
+	is_rw="$IS_NEWINSTALL" # yeni depolar daima SSH şeması kullanır
+	if [ -z "$is_rw" ] && gh_writable &&
+	   yesno "Bu makineden ana depoya gönderim yapacak mısınız?" h; then
+		is_rw=yes
+	fi
+	if [ -n "$is_rw" ]; then
+		git config remote.origin.url \
+			"git@github.com:${GITHUB_USER}/${REPOSITORY}"
+	else
+		cry "Depo salt-okunur olarak ayarlandı.  Bu makinede depoda" \
+		    "yaptığınız değişiklikleri GitHub'a gönderemezsiniz."
+	fi
+	git remote add upstream "git://github.com/${parent}"
+	say "Üst geliştirici referansı 'upstream' olarak ayarlandı. " \
+	    "Depoyu güncellemek için lütfen şu komutu kullanın:" \
+	    "'git pull upstream master'"
+
+	# ---------------------------------------------------------------------
+	# Kurulum dizinine taşı
+	# ---------------------------------------------------------------------
+
+	# Yedeklerin alınacağı geçici dizini oluştur.
+	usetempdir BACKUPDIR keeptemp
+
+	# Kopyalanacak tepe seviyedeki dosya/dizinlere bak.
+	for f in $(ls -A .); do
+		local target skel
+		target="${DESTDIR}/${f}"
+		if [ -f "$target" ] || [ -L "$target" ]; then
+			skel="/etc/skel/${f}"
+			if {
+				# hedef dosya sıfır boyutlu mu?
+				[ ! -s "$target" ]
+			} || {
+				# hedef dosya ile kaynak aynı mı?
+				cmp -s "$f" "$target"
+			} || {
+				# hedef dosya /etc/skel'den mi gelmiş?
+				[ -f "$target" ] && [ -f "$skel" ] &&
+				cmp -s "$skel" "$target"
+			}; then
+				# hedefi yedeklemek gerekmiyor
+				rm -rf "$target"
+				verbose "mevcut hedef dosya '$target' silindi"
+			else
+				# aksi halde yedekle
+				mv "$target" "${BACKUPDIR}/"
+				verbose "mevcut hedef dosya '$target'" \
+				        "'$BACKUPDIR' dizinine taşındı"
+			fi
+		# Hedef bir dizinse biraz daha özel davran.
+		elif [ -d "$target" ]; then
+			case "$f" in
+			.config)
+				# XDG yapılandırma dizinini taşıma.  Sadece
+				# mevcut dosyanın üzerine yaz.
+				;;
+			*)
+				mv "$target" "${BACKUPDIR}/"
+				verbose "mevcut hedef dizin '$target'" \
+				        "'$BACKUPDIR' dizinine taşındı"
+				;;
+			esac
+		fi
+	done
+
+	# Üzerine yazarak kopyala.
+	cp -a . "$DESTDIR"
+
+	# Artık hedef dizindeyiz.
+	cd "$DESTDIR"
+
+	# ---------------------------------------------------------------------
+	# Kurulum görevlerini çalıştır
+	# ---------------------------------------------------------------------
+
+	# Paket indeksleri daima güncel olmalı.
+	if [ -z "$HAS_APT_UPDATED" ]; then
+		say "Paket indeksleri güncelleniyor..."
+		sudoattempt
+		xaptitude update ||:
+		HAS_APT_UPDATED=yes
+	fi
+
+	# XXX Kurulum dizinde kurulum görevlerini çalıştır.
+	say "Kurulum görevleri çalıştırılıyor..."
+	taskrun07
+
+	# ---------------------------------------------------------------------
+	# Yeni kurulumu kaydet
+	# ---------------------------------------------------------------------
+
+	if [ -n "$IS_NEWINSTALL" ]; then
+		if ! git commit -a -m "$REPOSITORY_INITIATED_MESSAGE"; then
+			die "Depo değişiklikleri kaydedilirken hata oluştu. "\
+			    "Lütfen kurulumu tekrar deneyin."
+		fi
+		cry "Depo değişiklikleri GitHub'a gönderiliyor.  Sunucu"\
+		    "anahtarını onaylamanız ve parola girmeniz istenebilir..."
+		if ! git push origin master; then
+			die "GitHub gönderimi başarısız; kuruluma devam" \
+			    "edilemeyecek.  Bu geçici bir bağlantı sorunu" \
+			    "olabilir. Lütfen kurulumu tekrar deneyin."
+		fi
+	fi
+
+	# ---------------------------------------------------------------------
+	# Ekstra güvenlik önlemleri
+	# ---------------------------------------------------------------------
+
+	# Gizli dizin ve dosyalardan emin ol.
+	for d in $PRIVATEDIRS; do
+		[ -d "$d" ] || continue
+		chmod 700 "$d"
+		for f in $(ls -A "$d"); do
+			[ -f "${d}/${f}" ] || continue
+			chmod 600 "${d}/${f}"
+		done
+	done
+
+	# ---------------------------------------------------------------------
+	# Kurulumu sonlandır
+	# ---------------------------------------------------------------------
+
+	say "Kurulum sonlandırılıyor..."
+
+	# Yenilere bir hoşgeldin.
+	if [ -n "$IS_NEWINSTALL" ]; then
+		if [ -d "$PRIVATEDIR" ]; then
+			say "Gizlilik gerektiren dosyalar için ${PRIVATEDIR}" \
+			    "dizinini kullanın.  Dikkat! Bu dizini"\
+			    "depoya eklemeyin."
+		fi
+
+		if [ -f "$MANFILE" ] &&
+		   yesno "19/x kılavuzunu okumak ister misiniz?" e; then
+			man "$MANFILE" 2>/dev/null ||:
+		fi
+	fi
+
+	# Ayrım gözetmeksizin herkese.
+	say "19/x kılavuzunu okumak için 'man $MANUAL' komutunu çalıştırın."
+
+	# Yedeklenen dosyalar varsa varlığından bahset.
+	if ! rmdir $BACKUPDIR 2>/dev/null; then
+		cry "Eski bazı dosyalar '$BACKUPDIR' dizinine yedeklendi. " \
+		    "Bunları kontrol edin."
+	fi
+
+	moo="Kurulum tamamlandı!  Oturumu yeniden başlatın."
+	if [ -n "$DISPLAY" ] && [ -x "/usr/games/xcowsay" ]; then
+		local image opts
+		if [ -x /usr/bin/pngtopnm ] &&
+		   [ -f "$COWFILE" ] && image=$(/bin/mktemp); then
+			/usr/bin/pngtopnm "$COWFILE" >"$image"
+			opts="--image $image"
+		fi 2>/dev/null ||:
+		/usr/games/xcowsay $opts "$moo" 2>/dev/null ||:
+		[ -z "$image" ] || rm -f "$image"
+	elif [ -x "/usr/games/cowsay" ]; then
+		/usr/games/cowsay -W 60 "$moo" 2>&1
+	fi ||:
+
+	# Bir de konsolda.
+	cry "$moo"
+}
+
+main() {
+	# Yönetici hakkını almak kolay (sudo), vermek zor.
+	[ $(id -u) -ne 0 ] ||
+		die "Bu betiği başlangıçta root olarak çalıştırmamalısınız!"
+
+	# hmm, ne dediğimi ben de tam bilmiyorum ama bunu garanti sağlayalım ;-)
+	tty -s || tty -s </dev/tty ||
+		die "Uygun bir uçbirimde çalışmıyorsunuz"
+
+	# Neme lazım.
+	if DISTRO="$(lsb_release -si 2>/dev/null)"; then
+		case "$DISTRO" in
+		[Dd]ebian|[Uu]buntu) ;;
+		*) die "Üzgünüm '$DISTRO' desteklenmiyor veya tanımlı değil." ;;
+		esac
+	else
+		die "Üzgünüm şimdilik sadece Linux destekleniyor."
+	fi
+	readonly DISTRO
+
+	# Debian ve başka bazı dağıtımlarda gnome-terminal öntanımlı olarak
+	# beyaz arka planla geliyor.  Kullanıcı bu betiği böyle bir terminal
+	# üzerinde çalıştırıyorsa renklerin bir kısmı zor seçiliyor.  Bu durumu
+	# algıla ve arka plan rengini değiştir.
+	if ! ensure_visible_colors; then
+		# alt kabukta çalıştıralım çünkü renk düzeltmesi için trap
+		# kullanamıyoruz (trap usetempdir tarafından kullanılıyor)
+		( go "$@" ) || errcode=$?
+		setterm -term linux -inversescreen off 2>/dev/null ||:
+		exit $errcode # hatalı dönüş kodlarına saygı duy
+	else
+		go "$@"
+	fi
+}
+
+main "$@"
+
+# vim:ft=sh

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+PROGNAME=${0##*/}
+USAGE="Kullanım: $PROGNAME [-t hedef] [-n isim] [-c komut] [KOMUT ...]"
+
+use tmux
+use meta
+
+args=$(getopt "t:n:c:" $*) || bug "getopt hatası: $*"
+
+set -- $args
+while [ $# -ge 0 ]; do
+	case "$1" in
+	-t) target=$2; shift; shift ;;
+	-n) name=$2; shift; shift ;;
+	-c) command=$2; shift; shift ;;
+	-h) cry $USAGE; exit 0 ;;
+	--) shift; break ;;
+	esac
+done
+
+if [ $# -eq 0 ]; then
+	if [ -n "$command" ]; then
+		COMMAND=$command
+	else
+		COMMAND=bash
+	fi
+else
+	COMMAND="$1"
+	shift
+fi
+
+[ -n "$command" ] || command=$COMMAND
+
+LOCALE_ENV=
+for k in LC_ALL LC_CTYPE LC_MESSAGES LC_TIME; do
+	v=$(getv $k)
+	if [ -n "$v" ]; then
+		LOCALE_ENV="$k='$v' $LOCALE_ENV"
+	fi
+done
+
+TARGET=$(tmux_window_for "$command")
+if [ -n "$TARGET" ]; then
+	tmux select-window -t$TARGET
+else
+	curdir=$(tmux display -p "\$TMUXPWD_#I")
+	[ -z "$curdir" ] || cd "$curdir"
+	tmux new-window ${target:+-t${target}} ${name:+-n${name}} "$LOCALE_ENV exec $(tmux_prog_for "$COMMAND") $*"
+fi

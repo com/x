@@ -1,0 +1,75 @@
+#!/bin/bash
+
+use std
+
+LOGDIR=/var/log
+
+isinteractive || die "Etkileşimli bir terminal gerekiyor."
+
+while :; do
+	if [ -z "$1" ]; then
+		say "Dosya adı veya aşağıdaki kısayollardan birini girin."
+		message "${CO_BRACKET}s${CO_NORMAL} syslog |"\
+			"${CO_BRACKET}a${CO_NORMAL} auth.log |" \
+			"${CO_BRACKET}m${CO_NORMAL} messages.log\n" \
+			"\r${CO_BRACKET}n${CO_NORMAL} nginx/error.log |" \
+			"${CO_BRACKET}N${CO_NORMAL} nginx/access.log\n" \
+			"\r${CO_BRACKET}h${CO_NORMAL} apache2/error.log |" \
+			"${CO_BRACKET}H${CO_NORMAL} apache2/access.log"
+		cry "Ctrl-C veya \"q\" ile çıkabilirsiniz.\n"
+		ask "Dosya" "s"; asked=yes
+		FILE="$REPLY"
+	else
+		FILE="$1"
+	fi
+
+	case "$FILE" in
+	""|q)
+		exit
+		;;
+	s)
+		FILE=syslog
+		;;
+	a)
+		FILE=auth.log
+		;;
+	m)
+		FILE=messages
+		;;
+	n)
+		FILE=nginx/error.log
+		;;
+	N)
+		FILE=nginx/access.log
+		;;
+	h)
+		FILE=apache2/error.log
+		;;
+	H)
+		FILE=apache2/access.log
+		;;
+	esac
+
+	case "$FILE" in
+	/*) ;;
+	*) FILE="${LOGDIR}/${FILE}" ;;
+	esac
+
+	if [ -f "$FILE" ]; then
+		[ -r "$FILE" ] || sudoattempt
+
+		trap 'err=$?; [ -n $asked ] || exit $err' INT
+
+		if [ -x /usr/bin/ccze ]; then
+			sudo /usr/bin/tail -f "$FILE" | /usr/bin/ccze
+		else
+			sudo /usr/bin/tail -f "$FILE" | /usr/bin/ccze
+		fi
+
+		trap - INT
+	elif [ -z "$asked" ]; then
+		die "'$FILE' dosyası bulunamadı."
+	else
+		cry "'$FILE' dosyası bulunamadı.  Başka bir dosya deneyin."
+	fi
+done

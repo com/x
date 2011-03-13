@@ -1,0 +1,14 @@
+# Kimlik Ayarları
+
+set realname="$X_NAME"
+set from="$X_EMAIL"
+set hostname="`echo ${X_EMAIL#*@}`"
+set use_domain=yes
+my_hdr Organization: 19
+
+# Mutt'ın sizi tanıyabileceği alternatif eposta adresleri
+alternates `echo "^(${X_EMAIL%%@*})\@(gmail\.com|yahoo\.com|hotmail\.com|live\.com)"`
+
+# Öntanımlı imza
+set sig_dashes
+set signature='echo "${X_EMAIL%%@*}"|'

@@ -1,0 +1,167 @@
+#!/bin/sh
+
+# apt-iselect: interactive apt-cache search tool
+#
+# Dobrica Pavlinusic <dpavlin@rot13.org>
+# http://www.rot13.org/~dpavlin/apt-iselect.html
+#
+# 2003-08-02 first version
+# 2003-08-03 using mktemp to create temp files, auto-install iselect
+# 2003-08-04 catch signals so temp files are not left behind, added
+#		enter new search at end of results, autoconfig
+# 2003-08-06 changed delimiter to \s/ to prevent conflict with e-mails
+# 2003-08-15 automatically run apt-get update if there is no package list
+#		(e.g. changing apt/sources.list without update), cut lines
+#		to 80 chars before sending to iselect (bug workaround)
+# 2003-08-31 changed delimiters to {}, q on detail page brings back list of
+#		results, highlighted search word(s) in package details
+# 2003-09-01 changed script to work with any POSIX complient shell, and not
+#		only bash (thanks to Ulrich Doehner for bug report and
+#		suggestions), added support to use su if sudo is not
+#		installed, fixed search with more than one word (thanks
+#		to Tobias Gruetzmacher who reported this bug)
+# 2003-09-04 moved do_sudo before first call (fixes bug when trying to
+#		install iselect)
+# 2003-10-09 allow multi-selection of packages to view details
+# 2003-11-13 fix for RedHat 9.0 mktemp bug suggested by Dobes Vandermeer
+# 2004-07-27 allow multi-selection of packages to install
+# 2004-12-04 add quick install options
+# 2004-12-06 fixed multi-word search
+#
+# I know it's ugly, but it's still faster than aptitude :-)
+#
+# It will automatically use sudo if installed or require user to enter root
+# password when needed. It will also install iselect deb package
+# if it's not already there.
+#
+# WARNING: due to iselect limitation, maximum number of results is
+# 1020 and maximum length of all results is 1048576 bytes
+
+if [ ! -z "`which sudo`" ] ; then
+	use_sudo=1
+else
+	use_sudo=0
+fi
+
+do_sudo() {
+	msg=$1 ; shift
+	if [ "$use_sudo" = 1 ] ; then
+		sudo -p "$msg, please enter your password: " $*
+	else
+		if [ "`id -u`" != 0 ] ; then
+			echo "$msg, please enter root password..."
+		fi
+		su -c "$*"
+	fi
+}
+
+if [ -z "`which iselect`" ] ; then
+	echo "You really need iselect for apt-iselect, installing..."
+	do_sudo "Installing iselect" apt-get install iselect
+fi
+
+if [ -z "$*" ] ; then
+	echo "Usage: $0 [search pattern for apt-cache search]"
+	exit 1
+fi
+
+res=`mktemp /tmp/tmp-res.XXXXXX` || ( echo "Can't create temp file!" ; exit 1 )
+res2=`mktemp /tmp/tmp-res2.XXXXXX` || ( echo "Can't create temp file!" ; rmtemp ; exit 1 )
+sel=`mktemp /tmp/tmp-sel.XXXXXX` || ( echo "Can't create temp file!" ; rmtemp ; exit 1 )
+pkg=`mktemp /tmp/tmp-pkg.XXXXXX` || ( echo "Can't create temp file!" ; rmtemp ; exit 1 )
+
+rmtemp() {
+	rm -f $res
+	rm -f $res2
+	test -f $sel && rm -f $sel
+	rm -f $pkg
+}
+
+# need to update apt cache?
+LANG=C apt-cache stats 2>&1 | grep "^W: Couldn't stat source package list" >/dev/null && do_sudo "apt-get update needed" apt-get update
+
+trap 'rmtemp; exit 1' EXIT INT QUIT TERM SEGV
+
+apt_cache_search() {
+	search_words="$*"
+
+	echo "Searching apt-cache for \"$search_words\"..."
+
+	apt-cache search "$@" | head -1020 > $res
+	nr=`wc -l $res | sed 's/^ *//' | cut -d" " -f1`
+	if [ -z "$nr" ] || [ $nr = 0 ] ; then
+		echo "No results for \"$search_words\"" > $res2
+		#nr="no"
+	else
+		echo "$nr results for \"$search_words\", enter new search {s:search=%[Search for]S}" > $res2
+		echo >> $res2
+		cat $res | sed 's/^/{s}/' >> $res2
+	fi
+	if [ $nr -gt 0 ] ; then
+		echo >> $res2
+		echo "{s:_quick_install_}Install all selected" >> $res2
+	fi
+	echo >> $res2
+	echo "Enter new apt-cache search {s:search=%[Search for]S}" >> $res2
+}
+
+apt_cache_search "$@"
+
+pkg_nr=3
+loop=1
+
+OLD_IFS=$IFS
+NEWLINE='
+'
+
+while [ $loop = 1 ] ; do
+
+	loop=0;
+	iselect -m -d '{,}' -P -p $pkg_nr -n "apt-iselect: $nr results for \"$search_words\"" < $res2 > $sel
+
+	if [ ! -s $sel ] ; then
+		exit 0;
+	elif tmp=`grep search= <$sel 2>/dev/null` ; then
+		apt_cache_search `echo $tmp | grep search= | cut -d= -f2`
+		loop=1
+	elif tmp=`grep -i ':_quick_install_' $sel` ; then
+		debs=$(grep -v ':_quick_install_' $sel | cut -d: -f2 | cut -d" " -f1 | xargs echo)
+	
+		do_sudo "Installing '$debs'" apt-get install $debs
+	else
+		# not search, find packages info
+
+		echo '{s}Back to search results' > $pkg
+		echo >> $pkg
+		hl_regex=`echo $search_words | sed -e 's/ /|/' -e 's,^,s#(,' -e 's,$,)#{b}\\\1{/b}#g,'`
+
+		IFS=$NEWLINE
+		for line in $(cat <"$sel"); do
+
+			pkg_nr=`echo $line | cut -d: -f1`
+			pkg_full=`echo $line | cut -d: -f2`
+			pkg_name=`echo $pkg_full | cut -d" " -f1`
+			pkg_list="$pkg_list $pkg_name"
+
+			apt-cache show "$pkg_name" | cut -c-128 | sed 's/^\(Package: \)/{s}\1/' | sed -r "$hl_regex" | sed '1,3 s,{/*b},,g' >> $pkg
+
+		done
+		echo '{s}Back to search results' >> $pkg
+
+		tmp=`iselect -d '{,}' -n "Packages: $pkg_list" -m < $pkg`
+		if echo $tmp | grep -i back >/dev/null ; then
+			loop=1
+		elif echo $tmp | grep '^Package: ' >/dev/null ; then
+			deb=`echo $tmp | sed -e 's,{b/*},,g' -e 's,Package: *,,g'`
+			do_sudo "Installing '$deb'" apt-get install $deb
+		elif [ -z "$tmp" ] ; then
+			loop=1
+		else
+			echo -n "Can't parse output '$tmp' from iselect! Press enter to continue..."
+			read tmp
+			loop=1
+		fi
+	fi
+done
+
+rmtemp

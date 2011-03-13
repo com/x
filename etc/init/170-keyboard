@@ -1,0 +1,14 @@
+# Klavye yazım hızını arttır
+
+# XXX Normalde bu işlemin login aşamasında yapılması daha uygun fakat yapılan
+# ayar bazı durumlarda sıfırlandığından buraya alındı.
+
+[ -z "$SSH_CLIENT" ] || return 0
+
+if [ -n "$DISPLAY" ]; then
+	[ -x /usr/bin/xset ] && \
+		/usr/bin/xset r rate ${XKB_DELAY:-220} ${XKB_RATE:-80} ||:
+else
+	[ -x /usr/bin/kbdrate ] && \
+		/usr/bin/kbdrate -d ${KBD_DELAY:-190} ${KBD_RATE:-60} 2>/dev/null 1>&2 ||:
+fi

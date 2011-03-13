@@ -1,0 +1,1 @@
+[ -z "$PS1" ] || sourcedir "$X/etc/init"

@@ -1,0 +1,59 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "19\-VIM" "7" "Mart 2011" "19" "19 Kılavuzu"
+.
+.SH "AÇIKLAMA"
+\fBVim\fR ("Vi IMproved") çok güçlü bir programcı editörüdür\.
+.
+.SH "KISAYOLLAR"
+.
+.TP
+\fBctrl\-_\fR
+seçilen satırlarda açıklama ekle/kaldır
+.
+.TP
+\fBF9\fR
+kaynak dosyayı (ilgili programlama dili destekleniyorsa) derle
+.
+.TP
+\fBF10\fR
+kaynak dosyayı (ilgili programlama dili destekleniyorsa) çalıştır
+.
+.TP
+\fBF5\fR
+python kaynak dosyasının pep8 denetimini yap
+.
+.TP
+\fBş\fR
+kursörün bulunduğu kelimeyi tüm dosyada bul ve değiştir
+.
+.SH "ÖRNEKLER"
+TODO
+.
+.SH "EKLENTİLER"
+TODO
+.
+.SH "YAPILANDIRMA"
+\fBVim\fR yapılandırmaları \fB~/\.vimrc\fR dosyası ve \fB~/\.vim\fR dizininde, \fB19/x\fR yapılandırma dosyaları \fBetc/vim\fR dizinindedir\. Kurulum sırasında kurulan VIM eklentileri \fB~/\.vim/bundles\fR dizininde bulunabilir\.
+.
+.P
+Geniş kapsamlı olmayan özelleştirmelerinizi \fBetc/vim/local\.vim\fR veya \fBetc/vim/after/plugin/local\.vim\fR dosyalarında tutmanız önerilir\. \fB19/x\fR çalışma ortamının etkin kıldığı bir Vim ayarını, örneğin Vim renk temasını değiştirmek için ikincisini, yani \fBetc/vim/after/plugin/local\.vim\fR dosyasını kullanmalısınız; aksi halde \fB19/x\fR üst geliştiricisi tarafından yapılan ayar kullanılacaktır\.
+.
+.P
+Yeni eklenti kurmak için \fBetc/vim/local\fR dosyasını kullanabilirsiniz\. Yeni eklenti kuracaksanız lütfen bunu depoya eklemeyin, sadece eklenti çoğaltma adresini dosyada bulundurun\. Çoğaltma adresi bu şekilde eklenen yeni bir eklentiyi kurmak veya mevcut eklentileri (varsa) yeni sürüme güncellemek için \fB19/x\fR menüsünde "Vim Eklentileri Kur" seçeneğini çalıştırın\.
+.
+.SH "TELİF HAKKI"
+Copyright (C) 2011 19 tayfası \fIhttp://ondokuz\.biz/\fR
+.
+.SH "BAKINIZ"
+Bu kılavuzda \fB19/x\fR kapsamında yapılan düzenlemeler özetlenmektedir\. Programla ilgili daha ayrıntılı bilgi için lütfen aşağıdaki kaynaklara bakın\.
+.
+.P
+vim(1)
+.
+.P
+\fB19/x\fR yapılandırma sistemi hakkında genel bilgi almak için lütfen şu kaynaklara bakın\.
+.
+.P
+19\-xx(7)

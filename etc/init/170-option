@@ -1,0 +1,21 @@
+# Geçmişi "!birşeyler" şeklinde açarkane çalıştırmadan önce düzenle.
+shopt -s histverify
+
+# 'cd' yaparken yazım hatalarını düzeltmeye çalış.
+shopt -s cdspell
+
+# Boş satırda komut tamamlamaya çalışma.
+shopt -s no_empty_cmd_completion
+
+# Pencere boyutunu her komuttan sonra gerekiyorsa güncelle.
+# Bu ayar LINES ve COLUMNS ortam değişkenlerini güncel tutar.
+shopt -s checkwinsize
+
+# Tekrarlanan ve boş satırları geçmişe koyma
+HISTCONTROL=$HISTCONTROL${HISTCONTROL+:}ignoreboth
+
+# Geçmiş boyutu.
+HISTSIZE=100000
+
+# Geçmiş dosyasına ekle, üzerine yazma.
+shopt -s histappend

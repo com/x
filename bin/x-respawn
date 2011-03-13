@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Verilen programı çıkmasına izin vermeden bir döngü içerisinde çalıştır.
+
+use std
+
+# komutu başarılı oluncaya kadar n kere çalıştır
+repeatuntiltrue () {
+	[ $# -gt 2 ] || bug "iki argüman gerekiyor"
+	local n=$1
+	shift
+	local cmd=$1
+	shift
+
+	while [ $n -gt 0 ]; do
+		if $cmd $@; then
+			say "TAMAM"
+			return 0
+		fi
+		sleep 1
+		n=$(expr $n - 1)
+	done
+
+	die "Başarı test sınırına ulaşıldı"
+}
+
+args=$(getopt "N:" $*) || bug "getopt hatası: $*"
+
+set -- $args
+while [ $# -ge 0 ]; do
+	case "$1" in
+	-N) N=$2; shift; shift ;;
+	--) shift; break ;;
+	esac
+done
+
+[ $# -eq 1 ] || die "Kullanım: PROGRAM [-N <ağ deneme sayısı>]"
+
+PROG="$1"
+[ -x "$PROG" ] || hascommand "$PROG" || die "Böyle bir program yok: '$PROG'"
+if [ $# -gt 1 ]; then
+	shift
+else
+	set -- ""
+fi
+
+[ -z "$N" ] || repeatuntiltrue $N ping -c2 8.8.8.8
+
+while :; do
+	$PROG $@ || continue
+	reset
+	if ! yesno "Yeniden?" y; then
+		break
+	fi
+done

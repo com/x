@@ -1,0 +1,6 @@
+# mutt sidebar settings
+bind index,pager < sidebar-prev
+bind index,pager > sidebar-next
+bind index,pager z sidebar-open
+
+macro index,pager,browser B '<enter-command>toggle sidebar_visible<enter>'

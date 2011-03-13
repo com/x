@@ -1,0 +1,59 @@
+# Emacs-like bindings.
+bind editor "\e<delete>" kill-word
+bind editor "\e<backspace>" kill-word
+
+# Map delete-char to a sane value
+bind editor <delete> delete-char
+
+#bind pager <up> previous-line
+#bind pager <down> next-line
+
+bind index \t next-new
+bind pager \t next-new
+bind index ' ' next-unread
+bind pager ' ' next-unread
+
+bind browser x check-new
+bind browser M enter-mask
+bind index x sync-mailbox
+bind pager <up> previous-line
+bind pager <down> next-line
+bind pager <left> exit
+bind pager <right> view-attachments
+bind attach <left> exit
+bind attach <right> view-attach
+macro index <left> "<change-folder>?<toggle-mailboxes>" "Mailboxes"
+bind index <right> display-message
+macro browser <left> "<change-dir>..\n" "Upper directory"
+bind browser <left> exit
+bind browser <right> select-entry
+
+bind pager G bottom	# just like vi and less
+bind index <insert> tag-entry
+
+bind attach ' ' select-entry
+
+bind pager k previous-line
+bind pager j next-line
+bind pager h exit
+bind pager l view-attachments
+bind attach h exit
+bind attach l view-attach
+macro index h "<change-folder>?<toggle-mailboxes>" "Mailboxes"
+#bind index l display-message
+bind index l limit
+macro browser h "<change-dir>..\n" "Upper directory"
+bind browser h exit
+bind browser l select-entry
+
+bind index H display-toggle-weed
+bind pager H display-toggle-weed
+
+# Should be able to compose mail anywhere.
+macro browser m "qm"
+
+# Imitate the old search-body function.
+macro index \eb '/~b ' 'search in message bodies'
+
+macro index,pager . '<next-unread-mailbox><return>' 'Next Unread'
+macro compose v "<edit-from>^Uidentity_<tab>" "Select from"

@@ -1,0 +1,357 @@
+#!/bin/bash
+
+# Numarası verilen gist'i kopyala ve çalıştır.
+#
+# Dikkat!  Güvenilirlik denetimi yapılmıyor.  Lütfen sahibini bilmediğiniz
+# gist'leri çalıştırmayın.
+#
+# Depo çoğaltması (şimdilik) salt-okunur yapılır.  Eğer Gist'in sahibi siz
+# iseniz aşağıdaki gibi bir komutla depoyu yazılabilir duruma getirin.
+#   git config remote.origin.url git@gist.github.com:<GIST>.git
+
+set -e
+
+PROGNAME="${0##*/}"
+GISTDIR="${HOME}/gist"
+# TODO Güvenilirlik denetimi
+TRUSTED=
+
+# iletiyi stderr'de görüntüle
+message() {
+	printf -- "$*\n" | fold -s -w ${COLS:-80} >&2
+}
+
+# uyarı iletisi
+cry() {
+	message "${*}"
+}
+
+# hata iletisi
+die() {
+	message "${*}"
+	exit 19
+}
+
+# öntanımlı cevabı bekleterek kullanıcıya evet/hayır sor
+yesno() {
+	local default prompt answer
+
+	default=${2:-'e'}
+
+	case "$default" in
+	[eEyY]*) prompt="[E/h]" ;;
+	[hHnN]*) prompt="[e/H]" ;;
+	esac
+
+	while :; do
+		printf "$1 $prompt "
+		read -e answer </dev/tty
+
+		case "${answer:-$default}" in
+		[eE] | [eE][vV] | [eE][vV][eE] | [eE][vV][eE][tT] | \
+		[yY] | [yY][eE] | [yY][eE][sS])
+			return 0
+			;;
+		[hH] | [hH][aA] | [hH][aA][yY] | [hH][aA][yY][ıI] | [hH][aA][yY][ıI][rR] | \
+		[nN] | [nN][oO])
+			return 1
+			;;
+		*)
+			printf "Lütfen '[e]vet' veya '[h]ayır' girin\n"
+			;;
+		esac
+	done
+}
+
+run() {
+	./"$1"
+}
+run_makefile() {
+	make -f "$1"
+}
+run_rakefile() {
+	rake -f "$1"
+}
+run_thorfile() {
+	thor
+}
+run_shellscript() {
+	local file interpreter
+	file="$1"; interpreter=${INTERPRETER:=/bin/bash}
+	"$interpreter" "$file"
+}
+run_perl() {
+	local file interpreter
+	file="$1"; interpreter=${INTERPRETER:=/usr/bin/perl}
+	"$interpreter" "$file"
+}
+run_python() {
+	local file interpreter leading runfile
+
+	file="$1"; interpreter=${INTERPRETER:=/usr/bin/python}
+
+	case "$LEADING" in
+	\#*coding:)
+		# kodlama zaten tanımlanmış
+	;;
+	*)
+		leading='# -*- coding: utf-8 -*-'
+	;;
+	esac
+	if [ -n "$leading" ]; then
+		runfile=$(/bin/mktemp) || die "mktemp hatası"
+		trap '
+			exitcode=$?
+			if [ -d "'$runfile'" ]; then
+				rm -rf -- "'$runfile'"
+			fi
+			exit $exitcode
+		' EXIT HUP INT QUIT TERM
+		echo "#!${interpreter}" >>"$runfile"
+		echo "${leading}" >>"$runfile"
+		cat "$file" >>"$runfile"
+		chmod +x "$runfile"
+		"$runfile"
+	else
+		"$interpreter" "$file"
+	fi
+}
+run_ruby() {
+	local file interpreter
+	file="$1"; interpreter=${INTERPRETER:=/usr/bin/ruby}
+	"$interpreter" "$file"
+}
+run_php() {
+	local file interpreter
+	file="$1"; interpreter=${INTERPRETER:=/usr/bin/php}
+	"$interpreter" "$file"
+}
+run_c() {
+	local file interpreter
+	file="$1"; interpreter=${INTERPRETER:=/usr/bin/tcc -run}
+	"$interpreter" "$file"
+}
+run_vim() {
+	local f testfile
+
+	for f in test.txt test.in t; do
+		if [ -r "$f" ]; then
+			testfile="$f"
+			break
+		fi
+	done
+
+	vim -S "$1" ${testfile:=-}
+}
+
+shebang() {
+	local file oldifs shebang leading interpreter
+	file="$1"
+
+	oldifs="$IFS"
+	IFS=$'\n'
+	set -- $(head -n 2 "$file")
+	shebang="$1"; leading="$2"
+	IFS="$oldifs"
+
+	case "$shebang" in
+	\#!)   interpreter=${shebang##\#!}  ;;
+	\#\ !) interpreter=${shebang##\# !} ;;
+	*)     leading="$shebang"           ;;
+	esac
+}
+
+invoker() {
+	local file extension mimetype runtype func
+
+	unset FUNC
+	unset INTERPRETER
+	unset LEADING
+
+	file="$1"
+
+	case "$file" in
+	Makefile|Rakefile|Thorfile)
+		# gist içinde hazır bir çalıştırma reçetesi olduğunu varsay
+		echo "run_${file}" | tr 'A-Z' 'a-z'
+		return
+	;;
+	esac
+
+	# zaten çalıştırılabilir bir dosya ise file(1) kullanma
+	if [ -x "$file" ]; then
+		echo "run"
+		return
+	fi
+
+	mimetype="$(file -b --mime-type "$file" 2>/dev/null ||:)"
+	case "$mimetype" in
+	text/plain)
+		# düz metin ise belirsiz
+		mimetype=
+		;;
+	text/x-*)
+		# bir tür belirli metin, güzel!
+		;;
+	*)
+		# aksi halde geç
+		return
+		;;
+	esac
+
+	runtype="${mimetype##text/x-}"
+
+	# uzantı varsa bir kaç istisnai duruma bakalım
+	case "$file" in
+	*.*)
+		extension="${file##*.}"
+
+		case "$runtype" in
+		"")
+			# hmm, belirsizlik var
+			case "$extension" in
+			vim)
+				runtype=vim
+			;;
+			pl)
+				runtype=perl
+			;;
+			rb)
+				runtype=ruby
+			;;
+			# TODO diğerleri
+			esac
+		;;
+		${extension}*)
+			# uzantı mime tipi ile benzeşiyorsa sorun yok
+		;;
+		*)
+			# aksi halde file(1) hatalı tip belirlemiş olabilir
+			# file(1) python dosyalarını java olarak raporluyor
+			case "$extension" in
+			py)
+				runtype=python
+			;;
+			txt|"")
+				if head "$file" | grep -q "^[[:blank:]]*(import|from)[[:blank:]]+"; then
+					runtype=python
+				fi
+			;;
+			esac
+		;;
+		esac
+	;;
+	esac
+
+	if [ -n "$runtype" ]; then
+		local oldifs shebang
+
+		func="run_${runtype}"
+		if ! type "$func" >/dev/null 2>&1; then
+			cry "$mimetype türündeki $file dosyası desteklenmiyor."
+			return
+		fi
+
+		FUNC="$func"
+
+		oldifs="$IFS"
+		IFS=$'\n'
+		set -- $(head -n 2 "$file")
+		shebang="$1"; LEADING="$2"
+		IFS="$oldifs"
+
+		case "$shebang" in
+		\#!)   INTERPRETER=${shebang##\#!}  ;;
+		\#\ !) INTERPRETER=${shebang##\# !} ;;
+		*)     LEADING="$shebang"           ;;
+		esac
+	fi
+}
+
+gistid() {
+	local id
+
+	id="${1##*/}"
+	case "$id" in
+	*[0-9a-fA-F]*)
+		echo $id
+	;;
+	esac
+}
+
+if [ $(id -u) -eq 0 ]; then
+	die "Niçin yönetici haklarıyla çalışıyorsunuz?"
+fi
+
+if [ $# -eq 0 ]; then
+	while :; do
+		if [ -n "$DISPLAY" ] && [ -n "$(which xclip 2>/dev/null ||:)" ]; then
+			GISTID="$(xclip -o)"
+			if [ -n "$GISTID" ]; then
+				GISTID=$(gistid "$GISTID")
+				if [ -n "$GISTID" ] && yesno "Gist $GISTID ile devam edilsin mi?" e; then
+					break
+				fi
+			fi
+		fi
+		die "Kullanım: $PROGNAME <gistid>"
+	done
+else
+	GISTID=$(gistid "$@")
+	[ -n "$GISTID" ] || die "$GISTID hatalı bir Gist numarası."
+fi
+
+mkdir -p "$GISTDIR"; GISTREPO="${GISTDIR}/${GISTID}"
+
+if [ -d "$GISTREPO" ]; then
+	cry "Gist ${GISTID} güncelleniyor...\n"
+	cd "$GISTREPO"
+	if ! git pull -q; then
+		if [ -n "$(git ls-files -m "$@" 2>/dev/null ||:)" ] &&
+		   yesno "Gist'te yapılan değişiklikler sıfırlansın mı?" e; then
+			git reset --hard
+		fi
+	fi
+else
+	cry "Gist ${GISTID} GitHub'tan kopyalanıyor...\n"
+	if ! git clone "git://gist.github.com/${GISTID}.git" "$GISTREPO"; then
+		die "$GISTID numaralı Gist mevcut değil."
+	fi
+	cry
+	cd "$GISTREPO"
+fi
+
+# Basit ön denetim.
+case "$(echo *)" in
+\*|"")
+	die "Çalıştırmaya aday bir dosya bulunamadı."
+;;
+esac
+
+# Bir görüntüleyici bulalım.
+for b in less $PAGER eview gedit $EDITOR; do
+	if [ -n "$(which $b 2>/dev/null ||:)" ]; then
+		browser="$b"
+		break
+	fi
+done
+
+# Bu dosyalar özel.
+for file in Makefile Rakefile Thorfile; do
+	if [ -f "$file" ]; then
+		FILES="$file"
+		break
+	fi
+done
+
+# Özel dosyalar yoksa dönelim.
+for file in ${FILES:=*}; do
+	invoker "$file"
+	[ -n "$FUNC" ] || continue
+	if [ -n "$browser" ] && yesno "$file dosyasını görüntülemek ister misiniz?" h; then
+		$browser "$file"
+	fi
+	if [ -n "$IS_TRUSTED" ] || yesno "$file dosyası çalıştırılsın mı?" e; then
+		$FUNC "$file"
+	fi
+done

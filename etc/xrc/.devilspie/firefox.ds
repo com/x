@@ -1,0 +1,19 @@
+; Öntanımlı tarayıcıyı ikinci çalışma alanına al.
+(if (or
+      (and
+        (is (window_role) "browser")
+        (contains (window_class) "Firefox")
+      )
+      (is (application_name) "firefox-bin")
+    )
+  (set_workspace 2)
+)
+(if (or
+      (and
+        (is (window_role) "browser")
+        (contains (window_class) "Iceweasel")
+      )
+      (is (application_name) "firefox-bin")
+    )
+  (set_workspace 2)
+)

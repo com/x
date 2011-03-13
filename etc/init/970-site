@@ -1,0 +1,2 @@
+# Sürüm takibine alınmayan geçici yapılandırmayı oku.
+[ ! -f ~/.bashrc.site ] || . ~/.bashrc.site

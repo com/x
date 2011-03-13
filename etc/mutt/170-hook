@@ -1,0 +1,22 @@
+# Set the defaults for folders.
+folder-hook . set timeout=30
+folder-hook . set sort=threads
+folder-hook . set sort_aux=date-sent
+
+# When I'm in the main index, check more often :)
+folder-hook "!" set timeout=5
+
+# Alternative: date-received
+folder-hook "INBOX" set sort=threads
+folder-hook "inbox" set sort=threads
+folder-hook "sent" set sort=reverse-date
+folder-hook "Sent Mail" set sort=reverse-date
+
+# In normal mailboxes, always use the Reply-To address. In mailing lists
+# we may not want to do that.
+folder-hook . set reply_to=yes
+folder-hook ~l set reply_to=ask-yes
+
+#folder-hook . 'push <tag-pattern>~r>3w!~F<enter>'
+#folder-hook . 'push <delete-pattern>~r>3w!~F<enter><sync>'
+folder-hook . 'push <limit>~N|~F|~d<8w<return>'

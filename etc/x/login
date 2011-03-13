@@ -1,0 +1,4 @@
+[ -n "$PS1" ] || return 0
+sourcedir "$X/etc/login"
+sourcedir "$X/etc/init"
+anyattr no-screen || . "$X/etc/x/screen"

@@ -1,0 +1,24 @@
+# ----------------------------------------------------------------------------
+# T-prot extension
+# ----------------------------------------------------------------------------
+
+set display_filter='t-prot -cemktS --bigq --pgp-move-vrf --pgp-short -Mmutt \
+-l -L$HOME/.t-prot/mlfooters -a -A$HOME/.t-prot/adfooters'
+# set it to '' to turn it off by default
+
+# toggle TOFU protection with ESC-0 (off) and ESC-1 (on)
+macro generic \e0 ":unset display_filter\n" "Turn TOFU protection off"
+macro generic \e1 ":set display_filter='t-prot -cemktS --bigq --pgp-move-vrf \
+--pgp-short -Mmutt -l -L$HOME/.t-prot/mlfooters -a -A$HOME/.t-prot/adfooters'\n" \
+"Turn TOFU protection on"
+
+# same in pager mode - ugly but what the hell...
+macro pager \e0 ":unset display_filter; exec exit\n:exec display-message\n" \
+"Turn TOFU protection off"
+macro pager \e1 ":set display_filter='t-prot -cemktS --bigq --pgp-move-vrf \
+-Mmutt -l -L$HOME/.t-prot/mlfooters -a -A$HOME/.t-prot/adfooters'; \
+exec exit\n:exec display-message\n" "Turn TOFU protection on"
+
+# highlight TOFU protection:
+color body brightmagenta black "^\\[---.*"
+color body green         black "^#v[-+]"

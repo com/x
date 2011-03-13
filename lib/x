@@ -1,0 +1,99 @@
+# Boot X system through shell
+# Copyright ©, 2010 roktas
+# Licensed under WTFPL http://sam.zoy.org/wtfpl/
+
+# ------------------------------------------------------------------------------
+# X ortamı
+# ------------------------------------------------------------------------------
+
+if [ -z "$X" ]; then
+	# X - X kökü
+	if [ -n "$X_HOME" ]; then
+		X=$X_HOME
+	else
+		X=$HOME
+	fi
+	readonly X
+	export X
+
+	# Şimdi baz kitaplığını oku.
+	. "$X/lib/sh/core.sh"
+
+	# X - X sistem geneli kök
+	X_SYSTEM=/usr/lib/19
+	readonly X_SYSTEM
+	export X_SYSTEM
+
+	# PATH - X yolu (yönetici kontrolü yapmakla uğraşma)
+	PATH=/usr/local/sbin:/usr/local/bin:$X/bin:/usr/sbin:/usr/bin:/sbin:/bin:/var/lib/gems/1.9.1/bin:/var/lib/gems/1.8/bin:/usr/local/games:/usr/games
+	X_PATH=$PATH
+	export PATH X_PATH
+
+	# MANPATH - Kılavuz belgeleri
+	MANPATH=$MANPATH:$X/doc/man
+	export MANPATH
+
+	# SHLIB - Kabuk kitaplıkları
+	SHLIB=$X/lib/sh:$X_SYSTEM/sh
+	export SHLIB
+
+	# TASKLIB - Görev betikleri
+	TASKLIB=$X/lib/task:$X_SYSTEM/task
+	export TASKLIB
+
+	# MAKELIB - Make reçeteleri
+	MAKELIB=$X/lib/make
+	export MAKELIB
+
+	# RUBYLIB - Ruby kitaplıkları
+	RUBYLIB=${RUBYLIB}${RUBYLIB:+:}$X/lib/ruby:$X_SYSTEM/ruby
+	export RUBYLIB
+
+	# RAKE_SYSTEM - Rake görevleri
+	RAKE_SYSTEM=$X/lib/rake
+	export RAKE_SYSTEM
+
+	# XXX Thor görevleri ~/lib/tasks/*.thor olarak bulunuyor
+
+	# PERL5LIB - Perl kitaplıkları
+	PERL5LIB=${PERL5LIB}${PERL5LIB:+:}$X/lib/perl:$X_SYSTEM/perl
+	export PERL5LIB
+
+	# PYTHONPATH - Python kitaplıkları
+	PYTHONPATH=${PYTHONPATH}${PYTHONPATH:+:}$X/lib/python:$X_SYSTEM/python
+	export PYTHONPATH
+
+	# bunu X'in görüldüğü bir yerde bir kere yap
+	sourcedir "$X/etc/common"
+else
+	. "$X/lib/sh/core.sh"
+fi
+
+# ------------------------------------------------------------------------------
+# Sevkiyat (dispatch)
+# ------------------------------------------------------------------------------
+
+# bu noktada common her halükarda çağrılmış oluyor, çekirdek API'yi ihraç et
+exportmostf
+
+# her sevkiyat başında değişkenleri ihraç edelim
+exportx
+
+# bash için çağırana göre
+if [ -n "$BASH_SOURCE" ]; then
+	case "${BASH_SOURCE[$((${#BASH_SOURCE[*]}-1))]}" in
+	$HOME/.bashrc) . "$X/etc/x/init" ;;
+	$HOME/.bash_profile|$HOME/.profile) . "$X/etc/x/login" ;;
+	$HOME/.bash_logout) . "$X/etc/x/logout" ;;
+	$X/bin/x-xsession) . "$X/etc/x/xsession" ;;
+	$X/bin/x-screen) . "$X/etc/x/screen" ;;
+	esac
+elif [ -n "$X_RC" ]; then
+	# aksi halde açıkça verilmişse
+	sourcedir "$X/etc/x/$X_RC"
+fi
+
+# her sevkiyat sonrasında değişkenleri ihraç edelim
+exportx
+
+# vim:ft=sh

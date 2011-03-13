@@ -1,0 +1,33 @@
+# Gmail üzerinden posta göndermek için iki yöntem var.  Sistem geneli bir
+# yapılandırma gerektirmediğinden ilkini kullanıyoruz.
+#
+# 1. Msmtp
+#
+# -  Şu paketler kurulu olmalı: msmtp ca-certificates
+# - Mutt tarafında aşağıdaki ayar.
+# - Yapılandırmayı "tail -f /var/log/syslog" ile test et.
+#
+# 2. Exim4
+#
+# - Şu paketler kurulu olmalı: exim4-daemon-light exim4-config
+# - "dpkg-reconfigure exim4-config" komutunu çalıştır
+# - Seçeneklerden "smarthost (with local delivery)"i seç ve
+#   smtp.gmail.com::587' değerini gir.
+#   (Şuna benzer bir ileti: "Please enter the IP address or the host name of a
+#    mail server that this system should use as outgoing smarthost.")
+# - Aşağıdaki satırları "/etc/exim4/passwd.client"e ekle:
+#    gmail-smtp.l.google.com:login@gmail.com:secret
+#    *.google.com:login@gmail.com:secret
+#    smtp.gmail.com:login@gmail.com:secret
+# - Yapılandırmayı "tail -f /var/log/exim4/mainlog" ile test et.
+# - Mutt tarafında özel bir ayar gerekmiyor.
+
+# MTA ile irtibata geç.
+set sendmail="x-sendmail"
+set envelope_from=yes
+set use_from=yes
+
+# Gmail'ın Türkçe veya İngilizce olmasına göre farklı ayarlar.
+`p="+Sent Mail"; if [ -d ~/Mail/"Gönderilmiş Postalar" ]; then p="+Gönderilmiş Postalar"; fi; echo "set record=\"$p\""; echo "mailboxes \"$p\""`
+`p="+Drafts"; if [ -d ~/Mail/"Taslaklar" ]; then p="+Taslaklar"; fi; echo "set postponed=\"$p\""; echo "mailboxes \"$p\""`
+`p=; if [ -d ~/Mail/INBOX ]; then p="+INBOX"; fi; echo "mailboxes \"$p\""`

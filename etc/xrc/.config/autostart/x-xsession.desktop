@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Encoding=UTF-8
+Name=x-xsession
+Comment="19/x ilkle"
+Exec=x-xsession
+NoDisplay=True

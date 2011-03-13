@@ -1,0 +1,302 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use Getopt::Long;
+use LWP::UserAgent;
+use File::Basename qw(basename);
+use Pod::Usage;
+
+my %opts = ();
+
+GetOptions(\%opts, "help","man","clipboard","private","anonymous","type=s","name=s", "open") or pod2usage(2);
+if ($opts{help}) { pod2usage(1);}
+if ($opts{man}) { pod2usage(-exitstatus => 0, -verbose => 2);}
+
+my $type = $opts{type};
+my $name = $opts{name};
+my @files = @ARGV;
+my $count = 0;
+my %data = ();
+
+#
+# normalize the type if it was supplied
+#
+if ($type) {
+    my %types = ('---'=>' ', 'groff'=>'[1234567]', 'actionscript'=>'as',
+		 'tex'=>'aux', 'batchfile'=>'bat', 'befunge'=>'befunge', 'brainfuck'=>'bf',
+		 'boo'=>'boo', 'clojure'=>'clj', 'c#'=>'cs', 'css'=>'css', 'redcode'=>'cw',
+		 'd'=>'d', 'diff'=>'diff', 'darcs_patch'=>'dpatch', 'dylan'=>'dylan',
+		 'emacs_lisp'=>'el', 'fortran'=>'f', 'c'=>'h', 'c++'=>'hpp', 'erlang'=>'hrl',
+		 'haskell'=>'hs', 'html'=>'htm', 'ini'=>'ini', 'io'=>'io', 'java'=>'java',
+		 'javascript'=>'js', 'java_server_page'=>'jsp', 'genshi'=>'kid',
+		 'logtalk'=>'lgt', 'literate_haskell'=>'lhs', 'common_lisp'=>'lisp',
+		 'llvm'=>'ll', 'lua'=>'lua', 'objective-c'=>'m', 'makefile'=>'mak',
+		 'mako'=>'mao', 'matlab'=>'matlab', 'minid'=>'md', 'ocaml'=>'ml',
+		 'moocode'=>'moo', 'mupad'=>'mu', 'myghty'=>'myt', 'nu'=>'nu', 'numpy'=>'numpy',
+		 'delphi'=>'pas', 'processing'=>'pde', 'php'=>'php', 'html+php'=>'phtml',
+		 'perl'=>'pl', 'gettext_catalog'=>'pot', 'python'=>'py',
+		 'python_traceback'=>'pytb', 'raw_token_data'=>'raw', 'ruby'=>'rb',
+		 'rhtml'=>'rhtml', 'restructuredtext'=>'rst', 'gas'=>'s', 'scheme'=>'scm',
+		 'bash'=>'sh', 'sql'=>'sql', 'smalltalk'=>'st', 'tcl'=>'tcl', 'tcsh'=>'tcsh',
+		 'smarty'=>'tpl', 'plain_text'=>'txt', 'text_only'=>'txt', 'vb.net'=>'vb',
+		 'viml'=>'vim', 'irc_logs'=>'weechatlog', 'xml'=>'xsl', 'xslt'=>'xsl',
+		 'yaml'=>'yml');
+
+    $type = $types{$type} if $types{$type};
+    $type = ".$type" unless $type =~ m/^\./;
+}
+
+sub gistfile {
+    my ($name, $ext, $contents) = @_;
+
+    $count++;
+    $data{"file_ext[gistfile$count]"} = $ext;
+    $data{"file_name[gistfile$count]"} = $name;
+    $data{"file_contents[gistfile$count]"} = $contents;
+}
+
+sub slurp {
+    my $schema = shift;
+    open(C, $schema) or die "Ubable to open handle $schema: $!\n";
+    my $text = '';
+    $text .= $_ for <C>; 
+    close C;
+    return $text;
+}
+
+sub toclip {
+    my $schema = shift;
+    my $content = shift;
+    open(C, $schema) or die "Ubable to open handle $schema: $!\n";
+    print C $content;
+    close C;
+}
+
+sub which {
+    my $cmd = shift;
+
+    if (eval "require File::Which; 1") {
+        return File::Which::which($cmd);
+    } else {
+        return `which $cmd`;
+    }
+}
+
+#
+# paste the clipboard
+#
+if ($opts{clipboard}) {
+    if (which("pbpaste")) {
+	gistfile($name, $type, slurp("pbpaste |")); 
+    } elsif (which("xclip")) { 
+	gistfile($name, $type, slurp("xclip -o |")); 
+    } else {
+	die "no clipboard functionality found.  looked for 'pbpaste' and 'xclip'";
+    }
+}
+
+#
+# paste files
+#
+foreach my $file (@files) {
+    gistfile($name ? $name : basename($file), $type, slurp("< $file")); 
+}
+
+#
+# if nothing has yet been added, read standard in
+#
+if ($count == 0 ) {
+    my $text = "";
+    $text .= $_ for <STDIN>;
+
+    gistfile($name, $type, $text); 
+}
+
+#
+# private paste?
+#
+$data{'private'} = 'on' if $opts{private};
+
+#
+# get authentication info, if any
+#
+unless ($opts{anonymous}) {
+    my ($login, $token);
+    if (eval "require Git; 1") {
+	$login = Git::config('github.user');
+	$token = Git::config('github.token');
+    } elsif(which("git")) {
+	chomp($login = `git config --global github.user`);
+	chomp($token = `git config --global github.token`);
+    }
+   
+    # honor GITHUB_TOKEN environment variable
+    $token ||= $ENV{GITHUB_TOKEN};
+
+    if ($login and $token) {
+	$data{"login"} = $login;
+	$data{"token"} = $token;
+    }
+}
+#
+# post away
+#
+my $ua = LWP::UserAgent->new( agent => "gistpaste" );
+my $res = $ua->post("https://gist.github.com/gists", \%data);
+my $URL = $res->header( 'Location' );
+
+print "$URL\n";
+
+#
+# copy URL to clipboard
+#
+if (which("pbcopy")) {
+    toclip("| pbcopy", $URL); 
+} elsif (which("xclip")) { 
+    toclip("| xclip", $URL); 
+}
+
+if ($opts{open}) {
+    if (which("open")) {
+	`open $URL`;
+    } elsif (which("xdg-open")) {
+	`xdg-open $URL`;
+    }
+}
+
+=head1 NAME
+
+B<gistpaste> - Command line paste script for gist.github.com
+
+=head1 SYNOPSIS
+
+B<gistpaste> [options] [FILE...]
+
+=over
+
+=item Paste file(s)
+
+gistpaste thatfile.txt another.diff
+
+=item Paste STDIN
+
+grep "this" thatfile.txt | gistpaste
+ 
+=item Paste the clipboard contents
+
+gistpaste -c
+
+=back
+
+=head1 DESCRIPTION
+
+Pastes content to gist.github.com, a fullly featured paste bin.
+Resulting paste URL is printed to STDOUT and coppied to clipboard.
+Pastes can be generated from files, STDIN and the system clipboard.
+Clipboard support relies on either B<pbpaste> or B<xclip>.
+
+Pastes may be done anonymously or authenticated.  See the
+gist.github.com account page at L<https://github.com/account> and
+click the 'Global Git Config' for instructions on how to setup
+
+=head1 OPTIONS
+
+=over 
+
+=item B<-h> or B<--help>
+
+Display the usage and exit.
+
+=item B<-m> or B<--man>
+
+Display the man page and exit.
+
+=item B<-p> or B<--private>
+
+Paste privately
+
+=item B<-a> or B<--anonymous>
+
+Do not use a username when posting.  This is the default when there is
+no authentication information setup.
+
+=item B<-n> <name> or B<--name> <name>
+
+Specifies the desired file name for data read from STDIN or the
+clipboard.  When supplied along with files listed as arguments, the
+<name> parameter will be given as the file name instead of the name of
+the file as it exists on the system.
+
+=item B<-t> <type> or B<--type> <type>
+
+Specifies the desired content type of the data pasted to Gist, either
+via STDIN, the clipboard or file.  Gist will often ignore this
+parameter in favor of guessing the type based on the file name.
+
+=item B<-c> or B<--clipboard>
+
+Reads and posts data from the clipboard via B<pbpaste> or B<xclip> if
+available.
+
+=item B<-o> or B<--open>
+
+Open the URL in a browser after pasting.  Supported via the B<open>
+command (Mac OSX), or the B<xdg-open> command (Linux) if either are
+available.
+
+=back
+
+=head1 PREREQUISITES
+
+The C<LWP::UserAgent> and C<File::Which> modules are required.
+
+ sudo cpan LWP::UserAgent
+ sudo cpan File::Which
+
+=head1 EXAMPLES
+
+Paste a single file
+
+  % gistpaste thatfile.txt
+
+Paste multiple files of varying types
+
+  % gistpaste thatfile.txt Some.java another.pl
+
+Paste a single file and override the name, all functionally equivalent.
+
+  % gistpaste --name=thatfile.diff thatfile.txt
+  % gistpaste --name=thatfile.diff < thatfile.txt
+  % cat thatfile.txt | gistpaste --name=thatfile.diff
+
+Paste from STDIN
+
+  % grep "this" thatfile.txt | gistpaste
+  % svn diff thatfile.txt | gistpaste -t diff 
+  % gistpaste < thatfile.txt
+
+Copy content to the system clipboard and paste it
+
+  % gistpaste -c
+  % gistpaste -c -t xml
+  % gistpaste -c -n mydata.xml
+
+Paste a file without the name so Gist will not ignore the type
+parameter
+
+  % gistpaste --name=" " -t diff thatfile.txt
+  % gistpaste -t diff < thatfile.txt
+  % cat thatfile.txt | gistpaste -t diff
+
+=head1 AUTHOR
+
+David Blevins <dblevins@visi.com>
+
+=head1 COPYRIGHT
+
+Copyright (c) 2009 David Blevins. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+=cut

@@ -1,0 +1,40 @@
+# Kabuk ve Kabuk Araçları
+
+## AÇIKLAMA
+
+TODO
+
+## Git
+
+TODO
+
+## Sed
+
+TODO
+
+## Grep
+
+TODO
+
+## Awk
+
+TODO
+
+## Sort
+
+TODO
+
+## TELİF HAKKI
+
+Copyright (C) 2011 19 tayfası <http://ondokuz.biz/>
+
+## BAKINIZ
+
+Bu kılavuzda sık kullanılan programlara ilişkin bilgiler özetlenmektedir.  Bu
+programlarla ilgili daha ayrıntılı bilgi için lütfen programın kendi kılavuz
+belgesine bakın.
+
+**19/x** yapılandırma sistemi hakkında genel bilgi almak için lütfen şu
+kaynaklara bakın.
+
+19-x(7)

@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Hafif ortamlarda, güvensiz yerlerde asla parola bulundurma
+anyattr base server unsafe tc && skiptask "güvenli olmayan ortam"
+
+[ -n "$PRIVATEDIR" ] || PRIVATEDIR=.private
+
+cry "DİKKAT!  GÜVENLİ ŞEKİLDE PAROLA KAYDI YAPILACAK!"
+yesno "Bu makinede parola bulundurmak istediğinize emin misiniz?" || exit 0
+
+# Hedef dosyalar
+[ -n "$XRCFILE" ] || XRCFILE=".x"
+PASSFILE="${PRIVATEDIR}/gmail.base64"
+TOKENFILE="${PRIVATEDIR}/github"
+
+# Özel dizini oluştur
+mkdir -p "$PRIVATEDIR"
+chmod 700 "$PRIVATEDIR"
+
+X_EMAIL=$(sed  -ne "s/^[[:blank:]]*X_EMAIL=//p" "$XRCFILE" 2>/dev/null ||:)
+if [ -n "$X_EMAIL" ]; then
+	[ -x /usr/bin/base64 ] || die "/usr/bin/base64 bulunamadı"
+
+	# Parola dosyasını güvenli şekilde oluşturalım
+	touchsafe "$PASSFILE"
+
+	asksecret "Lütfen $X_EMAIL hesabına ait parolayı girin"
+	# Parolayı base64 ile kodluyoruz.  Bu basit bir obfuscation.  Kullanıcının
+	# herkesin gözü önünde yanlışlıkla parola dosyasını açarak "birtanem"i veya
+	# "qwerty"yi herkesin görmemesi için ;-)
+	echo "$REPLY" | /usr/bin/base64 >"$PASSFILE"
+	cry "Parola $PASSFILE dosyasına kaydedildi."
+fi
+
+# Güvenli şekilde bunu da oluştur (uyarılara rağmen token yazanlar var)
+touchsafe .gitconfig
+
+if [ -n "$GITHUB_USER" ]; then
+	git config --file .gitconfig github.user "$GITHUB_USER" 2>/dev/null ||:
+fi
+
+# Önce boş bir token dosyası oluştur
+touchsafe "$TOKENFILE"
+
+if [ -z "$GITHUB_TOKEN" ] && anyattr gui && hascommand xclip; then
+	cry "GitHub API token değeri kaydedilecek..."
+
+	cat <<-EOT
+
+Lütfen GitHub hesabınıza giriş yaptıktan sonra hesap ayarlarında aşağıda adresi
+verilen sekmeye girerek API token değerini fareyle seçin ve tekrar bu ekrana
+gelin.  API token değerini seçilir seçilmez otomatik olarak algılanacak ve
+sizden onay istenecektir.  Kayıt işleminden çıkmak için lütfen Ctrl-C tuşuna
+basın.
+
+        https://github.com/account#admin_bucket
+
+EOT
+	# panoyu sıfırla
+	echo | xclip -i
+	while :; do
+		sleep 1
+		GITHUB_TOKEN=$(xclip -o)
+		if [ -n "$GITHUB_TOKEN" ] && gh_istoken "$GITHUB_TOKEN"; then
+			cry "Seçilen: $GITHUB_TOKEN"
+			if yesno "Bu değer GitHub API token olarak kaydedilsin mi" e; then
+				break
+			else
+				GITHUB_TOKEN=; echo | xclip -i
+				cry "Lütfen tekrar deneyin!"
+			fi
+		fi
+	done
+fi
+
+if [ -n "$GITHUB_TOKEN" ]; then
+	echo "$GITHUB_TOKEN" >"$TOKENFILE"
+	cry "GitHub token '$TOKENFILE' dosyasına alındı."
+
+	if [ -n "$TASKSEL" ]; then
+		cry "Token değerinin etkin olması için"\
+		    "lütfen oturumu yeniden başlatın."
+	fi
+else
+	cry "Lütfen GitHub token değerini öğrenip '$TOKENFILE'"\
+	    "dosyasına kaydedin."
+fi

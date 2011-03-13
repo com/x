@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Özellikle tmux'ta tarihin yerelde gösterilmemesi problemi için
+date +'%a %Y-%m-%d'

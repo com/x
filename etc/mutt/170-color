@@ -1,0 +1,19 @@
+color normal     white black
+color attachment brightyellow black
+color markers    brightred black
+color tilde      black black
+
+color header     brightyellow black 'from:'
+
+color body       brightblue default  "((ftp|http|https)://|news:)[^ >)\"\t]+"
+color body       cyan  default "[-a-z_0-9.+]+@[-a-z_0-9.]+"
+color body       green default "(^| )_[-a-z0-9_]+_[,.?]?[\n]"
+color body       green default "(^| )_[-a-z0-9_]+_[,.?]?[ \n]"
+
+color index      yellow black  ~N        # New
+color index      yellow black  ~O        # Old
+color index      magenta black  ~F       # Flagged
+color index      brightyellow black  ~T  # Tagged
+color index      red  black  ~D          # Deleted
+
+color sidebar_new black yellow

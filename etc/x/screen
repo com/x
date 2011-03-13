@@ -1,0 +1,110 @@
+screen=$(selectalternatives X_SCREEN tmux byobu screen ${SHELL:=/bin/bash})
+if [ -z "$screen" ]; then
+	echo >&2 "Uçbirim çoğullayıcı bulunamadı veya çalıştırılabilir değil."
+	# TODO
+fi
+
+# uçbirim ile ilgili bilgi topla
+case "$TERM" in
+*xterm*)
+	# sık karşılaşılan durum için çabuk kod yolu
+	;;
+screen*)
+	# içiçe screen oturumu
+	setattr nested
+	;;
+*)
+	# sanal konsolda mıyız?
+	case "$([ -x /usr/bin/tty ] && tty 2>/dev/null ||:)" in
+	tty[0-9]|vc/[0-9]|console) setattr dumb ;;
+	esac
+	;;
+esac
+
+# SSH bağlantısı?
+[ -z "$SSH_CONNECTION" ] || setattr ssh
+
+screenname=${screen##*/}
+confdir="$X/etc/${screenname}"
+
+# profili al ve argümanları hazırla
+given="$1"
+if [ -n "$1" ]; then
+	given="$1"
+	setattr $given
+
+	# varsa profile dışındaki argümanlar sadece kabuklar için anlamlı
+	if [ $# -gt 1 ]; then
+		shift
+	else
+		set -- ""
+	fi
+fi
+
+# profil dizini
+profiledir="${HOME}/.${screenname}"
+
+# profil bulmaya çalış
+if [ -d "$profiledir" ]; then
+	for p in $(listdir "$profiledir" "[0-9]*${given}"); do
+		name=${p##*/}; attr=${name#*-}
+		if anyattr $attr; then
+			profile=$attr
+			profilefile=$p
+			break
+		fi
+	done
+	if [ -z "$profile" ]; then
+		profile=default
+		[ -z "$given" ] ||
+			echo >&2 "$screen için $given ile eşleşen bir profil bulunmadı"
+	fi
+fi
+
+# uçbirim yapılandırma dosyalarını listele (sonda profil olmalı)
+# 7'yi koşullu olarak etkinleştirilecek ayarlara ayır
+conffiles=$(
+	set +e
+	listdir "$confdir" '[0-6]'
+	anyattr dumb   || listdir "$confdir" '7*color256'
+	anyattr ssh    && listdir "$confdir" '7*ssh'
+	anyattr nested && listdir "$confdir" '7*nested'
+	listdir "$confdir" '[8-9]'
+	echo $profilefile
+) 2>/dev/null
+
+# çoğullayıcıyı başlat
+case "$screen" in
+tmux|*/tmux)
+	if ! anyattr dumb; then
+		# 256 renk desteği
+		opts="-2"
+		sessionfile=$confdir/session-256color
+		[ -f "$sessionfile" ] && opts="$opts -f $sessionfile"
+		# Yeni oturumlarda önce istemciyi ayır
+		flags="-d"
+	fi
+	if ! "$screen" has-session -t "$profile" 2>/dev/null; then
+		"$screen" $opts new-session $flags -n sh -s "$profile" "exec /bin/bash"
+		for f in $conffiles; do
+			"$screen" source-file "$f"
+		done
+	fi
+	exec "$screen" attach-session -t "$profile"
+	;;
+byobu|*/byobu)
+	# TODO
+	exec "$screen"
+	;;
+screen|*/screen)
+	# TODO
+	exec "$screen"
+	;;
+bash|*/bash|sh|*/sh)
+	# herhangi bir şey yapmaya gerek yok
+	;;
+*)
+	echo >&2 "Yazılım hatası; lütfen raporlayın."
+	exit 1
+	;;
+esac

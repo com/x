@@ -1,0 +1,11 @@
+#!/bin/bash
+
+anyattr base && skiptask "baz sistem"
+
+hascommand ruby || skiptask "ruby kurulu değil"
+
+# vim eklentilerini güncelleme betiği
+vimpluginupdateprog="./bin/vim-update-bundles"
+[ -x "$vimpluginupdateprog" ] || die "$vimpluginupdateprog bulunamadı."
+
+$vimpluginupdateprog

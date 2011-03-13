@@ -1,0 +1,13 @@
+#!/bin/sh
+
+if [ -x /usr/bin/msmtp ]; then
+	for f in "$HOME/.msmtprc" "$X/etc/msmtp/msmtprc"; do
+		if [ -r "$f" ]; then
+			confarg="-C $f"
+			break
+		fi
+	done
+	PATH=$X/bin:$PATH exec /usr/bin/msmtp --user "$X_EMAIL" $confarg "$@"
+elif [ -x /usr/sbin/sendmail ]; then
+	exec /usr/sbin/sendmail "$@"
+fi

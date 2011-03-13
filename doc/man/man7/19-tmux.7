@@ -1,0 +1,112 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "19\-TMUX" "7" "Mart 2011" "19" "19 Kılavuzu"
+.
+.SH "AÇIKLAMA"
+\fBtmux\fR bir oturum ekranı içinde birden fazla uçbirim oluşturmak ve bunlar arasında geçişler yapmak için tasarlanan bir uçbirim çoğullayıcısıdır ("Terminal Multiplexer")\.
+.
+.SH "KISAYOLLAR"
+Aşağıda listelenen kısayollarda örneğin \fBc\-a c\fR şeklinde gösterilen bir tuş kombinasyonu şu anlama gelmektedir: "Önce \fBCtrl\fR tuşuyla birlikte \fBa\fR tuşuna (aynı anda) basın, peşinden (aynı anda değil) \fBc\fR tuşuna basın\." "\fBc\-\fR" olarak gösterilen "\fBCtrl\fR" tuşuna benzer şekilde "\fBs\-\fR" gösterimi de "\fBShift\fR" tuşunu temsil etmektedir\.
+.
+.TP
+\fBc\-a c\fR
+yeni uçbirim oluştur
+.
+.TP
+\fBc\-a C\fR
+yeni uçbirimde mc(1) görsel kabuğunu çalıştır
+.
+.TP
+\fBf1\fR
+bağlam duyarlı kılavuz
+.
+.TP
+\fBs\-f1\fR
+kişisel kılavuz (\fB19\-not\.7\fR)
+.
+.TP
+\fBc\-a f1\fR
+posta okuyucuyu çalıştır veya çalışıyorsa ilgili pencereye ("\fB11\fR") geç
+.
+.TP
+\fBc\-a f2\fR
+sohbet programını çalıştır veya çalışıyorsa ilgili pencereye ("\fB12\fR") geç
+.
+.TP
+\fBc\-a f3\fR
+müzik çaları çalıştır veya çalışıyorsa ilgili pencereye ("\fB13\fR") geç
+.
+.TP
+\fBc\-a f8\fR
+servis/sistem göstergelerinin bulunduğu pencereye ("\fB18\fR") geç
+.
+.TP
+\fBc\-a f9\fR
+\fB19/x\fR menüsünü çalıştır veya çalışıyorsa ilgili pencereye ("\fB18\fR") geç
+.
+.TP
+\fBc\-a a\fR
+bir önceki etkin uçbirime geçiş yap
+.
+.TP
+\fBc\-a\fR \fBN\fR
+pencere numarası \fBN\fR olan uçbirime geçiş yap
+.
+.TP
+\fBc\-a X\fR
+uçbirimi kilitle
+.
+.TP
+\fBc\-a k\fR
+etkin pencereyi kapanmaya zorla ("kill")
+.
+.TP
+\fBc\-a %\fR
+pencereyi dikey olarak böl ve kabuk çalıştır
+.
+.TP
+\fBc\-a ?\fR
+klavye kısayollarını listele
+.
+.TP
+\fBc\-a tab\fR
+aynı ekranda dikey veya yatay olarak döşenmiş pencereler arasında geçiş yap
+.
+.TP
+\fBc\-a :\fR
+tmux komut istemi
+.
+.TP
+\fBc\-a space\fR
+bir sonraki pencereye geç
+.
+.TP
+\fBc\-a d\fR
+oturum ayır (tmux tekrar çalıştırıldığında oturum kaldığı yerden devam eder)
+.
+.TP
+\fBc\-a [\fR
+kopyalama kipine geç (ok tuşlarıyla hareket edilebilir)
+.
+.TP
+\fBc\-a ]\fR
+yapıştırma kipine geç
+.
+.SH "YAPILANDIRMA"
+Yapılandırma dosyaları \fBetc/tmux\fR, \fBtmux\fR profilleri \fB~/\.tmux\fR dizinlerindedir\.
+.
+.SH "TELİF HAKKI"
+Copyright (C) 2011 19 tayfası \fIhttp://ondokuz\.biz/\fR
+.
+.SH "BAKINIZ"
+Bu kılavuzda \fB19/x\fR kapsamında yapılan düzenlemeler özetlenmektedir\. Programla ilgili daha ayrıntılı bilgi için lütfen aşağıdaki kaynaklara bakın\.
+.
+.P
+tmux(1)
+.
+.P
+\fB19/x\fR yapılandırma sistemi hakkında genel bilgi almak için lütfen şu kaynaklara bakın\.
+.
+.P
+19\-x(7)

@@ -1,0 +1,257 @@
+# 19/x -- 19 Topluluğu Çalışma Ortamı
+
+## AÇIKLAMA
+
+**19** topluluğu Özgür Yazılım/Açık Kaynak geleneğine bağlı bir teknik
+topluluktur.  **19/x**, **19** topluluğu üyelerinin çalışma tarzını bir ölçüde
+kodifiye eden yapılandırma dosyaları, yardımcı programlar, kitaplıklar ve
+dokümanlardan oluşan bir uçbirim ("terminal") çalışma ortamıdır.
+
+## BAŞLANGIÇ
+
+**19/x** kurulumu başarıyla tamamlanmışsa oturum açıldığında çalışma ortamı
+devreye girecektir.  Tipik bir kullanım senaryosu olarak, örneğin GNOME gibi bir
+masaüstü ortamında çalışıyorsanız açılış sırasında xterm(1) ve onun üzerinde
+tmux(1) çalışan bir uçbirim penceresiyle karşılaşacaksınız.  SSH ile giriş
+yaptığınız bir makinede (sunucudaki kabuk hesabınızda **19/x** kurulu olması
+şartıyla) giriş işlemini takiben tmux çalışacaktır.
+
+Tmux uçbirim çoğullayıcı ekranının altında (kullandığınız açılış profiline göre
+değişen sayıda) o oturumda açılmış olan uçbirim pencerelerinin ismi ve numarası
+gösterilmektedir, örneğin "`0:bash`" `0` nolu pencerede `bash` kabuğunun
+çalıştığını göstermektedir.  Pencere numaralarını kullanarak pencereler arasında
+geçiş yapabilir veya yeni pencereler (programlar) oluşturabilirsiniz.  **19/x**
+tmux ekranında (durum satırı dediğimiz) bu alt kısımda pencere numaralarına ek
+olarak her zaman göz önünde bulundurulması yararlı olabilecek başka bazı
+bilgiler de vardır.  Sol tarafta (sırasıyla) son 1, 5 ve 15 dakikada işlemci
+yükünün aldığı değerler ("load average"), sağ tarafta ise tarih, saat ve makine
+ismi görüntülenmektedir.
+
+Tmux'ta tüm işlemler "ön ek" tuşu olarak ayarlanmış bir tuşa bastıktan sonra
+ilgili işlev için atanmış tuşu tuşlamakla gerçekleşmektedir.  **19/x** çalışma
+ortamında `c-a` tuşu (`Ctrl` ile birlikte `a` tuşuna basın) ön tanımlı tmux ön
+ek tuşu olarak ayarlıdır.  Örneğin `0` numaralı pencereye geçiş için önce `c-a`
+tuş kombinasyonunu kullanmanız ve peşinden `0` tuşuna basmanız gerekir (bu tuş
+vuruşlarını `c-a 0` olarak gösteriyoruz).
+
+Yeni bir kabuk ortamı açmak için `c-a c`, yeni bir mc(1) görsel kabuğu açmak
+için ise `c-a C` tuşunu kullanabilirsiniz.  Çalıştırılan her program bir pencere
+numarası alacak ve etkin pencere olarak ayarlanacaktır.  Sıklıkla iki pencere
+arasında geçiş yapmak istiyorsanız pencere numaralarını kullanmak yerine `c-a a`
+tuş kombinasyonunu kullanabilirsiniz.  Örneğin yeni bir pencereye geçtiğinizde
+bir önceki etkin pencereye geçiş için `c-a a` tuşuna basın ve yeni pencereye
+geri dönmek için yine aynı tuşu kullanın.
+
+Bu şekilde çalıştırılan bir program sonlandığında ilgili pencere de otomatik
+olarak kapatılır.  Siz istemedikçe sonlanmayan etkileşimli programlarda (örneğin
+bash kabuğu) pencereyi kapatmak için program tarafından sunulan "programdan
+çıkış" işlevini kullanmanız gerekir.  Örneğin bash kabuğu çalıştıran bir
+pencereyi kapatmak için o pencere etkinken `exit` yazın veya daha pratiği `c-d`
+tuşuna basın.  Herhangi bir sorundan dolayı program sonlanmıyor ve pencere hep
+açık (ve çoğunlukla tepkisiz) kalıyorsa `c-a k` tuş kombinasyonunu
+kullanabilirsiniz.
+
+**19/x** çalışma ortamı kılavuz (man) dosyalarıyla dokümante edilmiştir.  Bu
+kılavuz belgelerini man(1) komutuyla kabuk ortamında görüntüleyebilir veya
+önerilen yöntem olarak, uçbirimde herhangi bir anda `F1` tuşuna basarak man
+programını çağırabilirsiniz.  `F1` tuşuyla etkinleştirilen kılavuz görüntüleme
+işlemi büyük ölçüde bağlam duyarlıdır.  İlgili kılavuz "önerisi" (bağlam)
+pencere başlığına bakarak belirlenir ve öneriyi (`ENTER` tuşlayarak) kabul
+etmeniz halinde o sırada etkin olan pencereyle ilgili yardım görüntülenir.
+İstemediğiniz bir bağlam belirlenmişse veya farklı bir kılavuz dosyasını
+görüntülemek istiyorsanız tmux komut isteminde kılavuz belgesinin ismini
+yazmanız yeterli olacaktır.
+
+Bu kısımda **19/x** çalışma ortamını kullanabilmeniz için başlangıçta yeterli
+olabilecek asgari bilgiler özetlenmiştir.  Tmux başta olmak üzere **19/x**
+bileşenleri için ayrıntılı bilgi edinmek için lütfen ilgili kılavuz belgelerini
+okuyun.  Her hangi bir bileşenle ilgili **19/x** özellikleri için "`19-`" ön
+ekiyle isimlendirilmiş kılavuz belgesini okuyun.  Örneğin vim(1) için 19-vim(7),
+yani basitçe `man 19-vim` komutunu kullanabilir veya  Vim çalışan bir pencerede
+`F1` tuşuna basabilirsiniz.
+
+## BİLEŞENLER
+
+**19/x** çalışma ortamının temel bileşenleri bash(1) kabuğu ve tmux(1) uçbirim
+çoğullayıcıdır.   Her koşulda gerekecek bu temel bileşenlerin yanısıra; xterm(1)
+X uçbirimi emülatörü, vim(1) programcı editörü, mc(1) görsel kabuğu, mutt(1)
+posta okuyucu ve weechat-curses(1) sohbet programı da **19/x** çalışma ortamında
+desteklenen veya kullanılması özendirilen başlıca araçlardır.  Desteklenen veya
+önerilen araçlar hakkında gerekli özet bilgiyi bu kısımda bulacaksınız.
+
+### İlkeler
+
+Üyelerin öncelikle ev dizinlerine kurulacak şekilde tasarlanmış olan bu ortamın
+tasarım ve gerçeklemesinde genel olarak şu ilkeler izlenmiştir:
+
+  * Geleneklere uygunluk:
+    Kendine özgü ağır bir uygulama veya yapılandırma çatısı olmaya çalışmak
+    yerine mevcut araçları kullanır ve yerleşmiş konvansiyonları izlemeye
+    çalışır.
+
+  * Taşınabilirlik:
+    Çalışma ortamı için asgari gereksinim bash(1) kabuk ortamı başta olmak üzere
+    _BİLEŞENLER_ kısmında listelenen araçların çalıştırılabileceği bir UNIX
+    ortamıdır.  **19/x** bu koşulları sağlayan tüm dağıtım (ör. Debian
+    GNU/Linux) veya işletim sistemlerinde (ör. OpenBSD, Mac OS X®)
+    çalıştırılabilir.  Ayrıca ortam Grafik Arayüz bulunmayan sunucular veya
+    kısıtlı uçbirim özelliklerine sahip sanal konsollarda da (ör. GNU/Linux
+    sanal konsolları) çalıştırılabilir.
+
+  * Güncellenebilirlik:
+    **19/x** çalışma ortamında yapılan değişiklikler git(1) sürüm takip
+    sistemiyle yönetilmektedir.  İlk kurulum da dahil olmak üzere tüm
+    konuşlandırma ("deployment") eylemleri git(1) ile gerçekleşmektedir.
+
+  * Özelleştirilebilirlik:
+    Çalışma ortamı kapsamı değişen düzeylerde özelleştirilebilir ve
+    _ÖZELLEŞTİRMELER_ kısmında önerilen kurallara uyulması kaydıyla bu
+    özelleştirmeler ortam güncellemelerinde de korunur.
+
+  * Geliştirici dostluğu:
+    **19/x** son kullanıcıya yönelik bir çalışma ortamı olarak tasarlanmamıştır.
+    Temel UNIX bilgisi ve en azından komut satırına aşina olmayı gerektirir.
+    **19/x** menüsü başta olmak üzere çalışma ortamında sunulan yardımcı
+    betikler, kullanıcı bilgisinin yetersizliğine yönelik olarak _değil_,  sık
+    kullanılabilecek olmasından dolayı eklenmiştir.
+
+TODO Yazılacak
+
+## İLKLENDİRME
+
+**19/x** çalışma ortamı `~/.x` dosyasıyla ilklendirilmektedir.  Bazı tercihlerin
+yapılmasına da olanak sağlayan bu dosyanın (herhangi bir tercih yapılmasa bile)
+en azından varlığı gerekmektedir.  Bu dosya diğer **19/x** ilklendirme ve
+yapılandırma betikleri tarafından ithal edilmektedir.  Dosyada sadece POSIX
+kabuk özellikleri kullanılması, örneğin Bash'e özgü özelliklerden kaçınılması
+gerekir.  Mutlaka Bash'e özgü bir özellik kullanmak gerekiyorsa ilgili satırları
+aşağıdaki gibi koşullu yapılmalıdır:
+
+        if [ -n "$BASH" ]; then
+                ...
+        fi
+
+Bu dosyanın yokluğu halinde **19/x** ilklendirme sistemi devreden çıkacaktIr.
+**Dosyada yapılabilecek hatalı bir değişiklik sisteme girişte sorunlara yol
+açacaktır**.  Dosyayı düzenledikten sonra aşağıdaki komutu çalıştırarak en
+azından basit sözdizimi denetimi yapılmasında yarar vardır:
+
+         sh -n ~/.x
+
+### Değişkenler
+
+  * `X_SCREEN`:
+    Açılışta çalışacak uçbirim çoğullayıcı. Değer olarak ilgili programın mutlak
+    dosya yolu veya `PATH`'te tanımlı ise kısaca adı verilebilir.
+
+    Bu değişken `login`'de dikkate alınır.
+
+  * `X_EDITOR`:
+    Grafik ortamda (her ortamda **değil**) kullanılacak metin düzenleyici.
+    Değer olarak ilgili programın mutlak dosya yolu veya `PATH`'te tanımlı ise
+    kısaca adı verilebilir.
+
+    Bu değişken `xsession`'da dikkate alınır.
+
+  * `X_TERM`:
+    Açılışta çalıştırılacak X uçbirimi.  Değer olarak ilgili programın mutlak
+    dosya yolu veya `PATH`'te tanımlı ise kısaca adı verilebilir.
+
+    Bu değişken `xsession`'da dikkate alınır.
+
+### Oturum Nitelikleri
+
+Oturum nitelikleri **19/x** oturum ilklendirmesinde gerçekleştirilecek eylemleri
+koşullu hale getirmek amacıyla tasarlanmış sözcüklerdir.  Bu sözcükler boşluk
+kullanılarak `X_ATTR` isimli özel değişkene eklenmeleri halinde etkin
+olmaktadır.  Nitelik eklemesi, yani niteliğe karar verilmesi işlemi,
+yapılandırma dosyalarında çoğunlukla ilklendirmenin erken safhalarında (ör.
+`common`) dinamik olarak gerçekleştirilir.  Çoğunlukla aynı anda birden fazla
+nitelik etkin olabilir.
+
+`X_ATTR` değişkenine doğrudan erişmek ve yazmak yerine aşağıda belirtilen
+işlevler kullanılmalıdır.
+
+  * `setattr`: Nitelik ata.  Örnek:
+
+        setattr foo
+
+  * `anyattr`: Verilen niteliklerden herhangi birisi tanımlıysa doğru döner
+    (**VEYA** işlemi).  Örnek:
+
+	if anyattr foo bar; then
+                # foo veya bar nitelikleri tanımlıysa bir şey yap
+        fi
+
+  * `allattr`: Verilen niteliklerin tümü varsa doğru döner (**VE** işlemi).
+    Örnek:
+
+	if allattr foo bar; then
+                # foo veya bar niteliklerinin tümü tanımlıysa bir şey yap
+        fi
+
+Bu işlevler (yukarıda açıklanan anlamda) oturum niteliklerini belirlemek dışında
+oturum tercihleri için de kullanılırlar.  Bkz. [Standart Nitelikler][].
+
+### Örnekler
+
+Oturumun grafik ortamda gerçekleştiğini anlatmak için `gui` niteliği seçilmişse
+bu nitelik şu şekilde etkinleştirilebilir:
+
+    if [ -n "$DISPLAY" ]; then
+            setattr gui
+    fi
+
+Nitelik tayini yapıldıktan sonra bu nitelik şu şekilde kullanılabilir:
+
+    if anyattr gui; then
+            EDITOR="/usr/bin/gvim -f"
+    fi
+
+TODO Yazılacak
+
+### Standart Nitelikler
+
+Aşağıdaki nitelikler belirtilen standart anlamlarda yorumlanmalıdır.
+
+  * `main`:
+    Kullanıcının ana çalışma makinesi.
+
+  * `gui`:
+     Grafik ortamda çalışan bir makine.  Ör. X Window System çalıştıran bir
+     makine.
+
+  * `desktop`:
+    Grafik masaüstü yöneticisi (ör. GNOME, XFCE) çalıştıran bir makine.
+
+  * `server`:
+    Sunucu niteliğinde kullanılan bir makine.
+
+  * `dumb`:
+    Renk desteği başta olmak üzere terminal özellikleri zayıf bir ortam.  Ör.
+    Yerelde sanal konsollardan (virtual terminal) erişilen bir makine.
+
+  * `tc`:
+    İnce istemci ("thin client").
+
+  * `ssh`:
+    SSH yoluyla erişilmiş bir makine.
+
+  * `unsafe`:
+    Güvenli olmayan bir makine.
+
+### Standart Tercihler
+
+  * `no-terminal`: Açılışta uçbirim çalıştırma.
+
+  * `no-screen`: Açılışta uçbirim çoğullayıcı çalıştırma.
+
+  * `no-fullscreen`: Açılışta çalıştırılan uçbirimi tam ekran yapma.
+
+## ÖZELLEŞTİRMELER
+
+TODO Yazılacak
+
+## TELİF HAKKI
+
+Copyright (C) 2011 19 tayfası <http://ondokuz.biz/>

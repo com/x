@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# Sadece yeni kurulumlarda anlamlı.
+if [ -z "$IS_NEWINSTALL" ] || anyattr base; then
+	skiptask "baz sistem veya yeni olmayan kurulum"
+fi
+
+[ -n "$XRCFILE" ] || XRCFILE=".x"
+GITCONFIGFILE=".gitconfig"
+
+# Sorularda öntanımlı cevaplar
+if [ -n "$X_EMAIL" ]; then
+	DEFAULT_X_EMAIL="$X_EMAIL"
+elif [ -n "$GIT_AUTHOR_EMAIL" ]; then
+	DEFAULT_X_EMAIL="$GIT_AUTHOR_EMAIL"
+fi
+
+if [ -n "$X_NAME" ]; then
+	DEFAULT_X_NAME="$X_NAME"
+elif [ -n "$GIT_AUTHOR_NAME" ]; then
+	DEFAULT_X_NAME="$GIT_AUTHOR_NAME"
+else
+	DEFAULT_X_NAME=$(
+		awk -F: '$1 == "'"$USER"'" { sub(",.*$", "", $5); print $5 }' \
+			/etc/passwd 2>/dev/null ||:
+	)
+fi
+
+if [ -z "$X_NAME" ] || [ -z "$X_EMAIL" ]; then
+	while :; do
+		if [ -z "$X_EMAIL" ]; then
+			ask "Eposta adresi?" "$DEFAULT_X_EMAIL"
+			X_EMAIL="$REPLY"
+		fi
+
+		if [ -z "$X_NAME" ]; then
+			ask "Ad soyad?" "$DEFAULT_X_NAME"
+			X_NAME="$REPLY"
+		fi
+
+		cry "\nBu bilgilerle devam edilecek:\n\n\tAd Soyad: $X_NAME\n\tEposta: $X_EMAIL\n"
+		if yesno "Onaylıyor musunuz?" e; then
+			break
+		fi
+		DEFAULT_X_EMAIL="$X_EMAIL"; DEFAULT_X_NAME="$X_NAME"
+		X_EMAIL=; X_NAME=
+	done
+fi
+
+# Bu kısım fazlasıyla sıkıcı, fakat gayet güvenli...
+
+if [ -w "$XRCFILE" ]; then
+	re='^[[:blank:]]*X_NAME='
+	if egrep -q "$re" "$XRCFILE"; then
+		if sed -i -e "s/${re}.*/X_NAME='$X_NAME'/g" "$XRCFILE"; then
+			cry "Ad soyad $XRCFILE dosyasına eklendi."
+		fi
+	fi
+	re='^[[:blank:]]*X_EMAIL='
+	if egrep -q "$re" "$XRCFILE"; then
+		if sed -i -e "s/${re}.*/X_EMAIL='$X_EMAIL'/g" "$XRCFILE"; then
+			cry "Eposta adresi $XRCFILE dosyasına eklendi."
+		fi
+	fi
+
+	if [ -n "$TASKSEL" ]; then
+		cry "Kaydedilen bilgilerin etkin olması için"\
+		    "lütfen oturumu yeniden başlatın."
+	fi
+fi
+
+# Hazır yeri gelmişken...
+if [ -w "$GITCONFIGFILE" ]; then
+	if [ -z "$GIT_AUTHOR_EMAIL" ] && [ -n "$X_EMAIL" ]; then
+		git config --file "$GITCONFIGFILE" user.email "$X_EMAIL" 2>/dev/null ||:
+		cry "Eposta adresi $GITCONFIGFILE dosyasına eklendi."
+	fi
+	if [ -z "$GIT_AUTHOR_NAME" ] && [ -n "$X_NAME" ]; then
+		git config --file "$GITCONFIGFILE" user.name "$X_NAME" 2>/dev/null ||:
+		cry "Ad soyad $GITCONFIGFILE dosyasına eklendi."
+	fi
+fi

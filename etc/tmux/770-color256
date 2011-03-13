@@ -1,0 +1,12 @@
+set-window-option -g window-status-format "#[fg=colour244]#I:#[fg=colour237]#W#[fg=colour198,bright]#F#[fg=white,bg=black]"
+# etkin pencere biçimi (pencere bayrağı için "#W"den "#[fg=colour198,bright]#F")
+set-window-option -g window-status-current-format " #[fg=colour198,bright]#I:#[fg=colour111]#W#[fg=white,bg=black] "
+# durum alanları
+set -g status-left "  #[fg=colour111,bright]#(cut -d \" \" -f 1,2,3 </proc/loadavg)#[default]  "
+set -g status-right "  #[fg=colour111,bright]%a %Y-%m-%d#[default] #[fg=colour198,bright]%H:%M#[default] #[fg=colour237][#H]#[fg=white,bg=black]  "
+# türkçe tarih için özel düzenleme
+set -g status-right "  #[fg=colour111,bright]#(x-tmux-date)#[default] #[fg=colour198,bright]%H:%M#[default] #[fg=colour237][#H]#[fg=white,bg=black]  "
+# komut/ileti renkleri
+set -g message-bg default
+set -g message-fg colour111
+set -g message-attr bright

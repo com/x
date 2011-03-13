@@ -1,0 +1,26 @@
+if [ -n "$X_EDITOR" ]; then
+	if ! [ -x "$X_EDITOR" ]; then
+		echo >&2 "seçilen editör $X_EDITOR çalıştırılabilir değil"
+		echo >&2 "X_EDITOR değişkeni mutlak bir dosya yolu olmalı"
+	fi
+
+	case "$X_EDITOR" in
+	*/cream)
+		editor="$X_EDITOR -f"
+		;;
+	*/vim|*/evim|*/gvim|*/nano|*/emacs|*/pico|*/joe|*/jed)
+		editor="$X_EDITOR"
+		;;
+	*)
+		echo >&2 "$X_EDITOR X_EDITOR için uygun olmayan bir seçim"
+		echo >&2 "desteklenen editörler 'vim gvim nano emacs pico joe jed'"
+		;;
+	esac
+fi
+
+if [ -n "$editor" ]; then
+	export EDITOR="$editor"
+fi
+
+unset editor
+unset X_EDITOR

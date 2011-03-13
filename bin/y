@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+require 'thor/runner'
+require 'thor/util'
+
+if (PROGNAME = File.basename($0).split(' ').first) != 'thor'
+  def load_thorfiles_from(*dirs)
+    dirs.each do |path|
+        Thor::Util.globs_for(path)
+        .map  { |glob| Dir[glob] }.flatten
+        .each { |file| Thor::Util.load_thorfile file }
+    end
+  end
+
+  class Runner < Thor::Runner
+    def initialize(*args)
+      super
+      load_thorfiles_from File.join(ENV['X'] || ENV['HOME'], 'lib', 'thor')
+    end
+
+    def method_missing(*args)
+      super
+    rescue NoMethodError
+      $stderr.puts("Böyle bir görev yok '#{args.join(' ')}'")
+      help
+      exit 1
+    end
+
+    private
+
+      def self.banner(task, all = false, subcommand = false)
+        "#{PROGNAME} " + task.formatted_usage(self, all, subcommand)
+      end
+
+      alias :display_klasses_orig :display_klasses
+      def display_klasses(*args)
+        klasses = args.last
+        klasses.reject! { |k| k.to_s.end_with? '_' }
+        display_klasses_orig  *args
+      end
+
+  end
+else
+  Runner = Thor::Runner
+end
+
+$thor_runner = true
+Runner.start

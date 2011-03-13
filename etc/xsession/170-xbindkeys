@@ -1,0 +1,2 @@
+# Start xbindkeys.
+[ -x /usr/bin/xbindkeys ] && [ -f ~/.xbindkeysrc ] && /usr/bin/xbindkeys

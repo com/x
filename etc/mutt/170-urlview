@@ -1,0 +1,5 @@
+macro index \cb |urlview\n 'call urlview to extract URLs out of a message'
+macro pager \cb |urlview\n 'call urlview to extract URLs out of a message'
+
+macro index \cv |x-urlview-gistr\n 'call gistr to extract URLs out of a message'
+macro pager \cv |x-urlview-gistr\n 'call gistr to extract URLs out of a message'

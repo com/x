@@ -1,0 +1,139 @@
+# ----------------------------------------------------------------------------
+# Genel ayarlar
+# ----------------------------------------------------------------------------
+
+unset arrow_cursor
+set ascii_chars
+set attribution="* %n [%d]"
+#set attribution="* %n <%a> [%d]"
+set noautoedit
+set beep_new
+unset nobounce_delivered   # Postfix/qmail use Delivered-To for detecting loops
+#set charset="utf-8"
+set confirmcreate
+set noconfirmappend
+set date_format="!%Y-%m-%d %T%Z"
+set edit_headers
+set encode_from
+set fast_reply
+#set fcc_clear
+set fcc_attach
+set followup_to
+set noforce_name
+set hdrs
+set honor_followup_to
+set implicit_autoview=no
+set pager_context=1
+set pager_index_lines=7
+set pager_stop
+# set reverse_alias
+set reverse_name
+set reverse_realname
+set save_name
+#set send_charset="us_ascii:iso-8859-1:iso-8859-9:utf-8"
+set nosig_dashes
+set sort=threads
+set sort_aux=date
+set sort_browser=unsorted
+# set sort_browser=reverse-date
+set tilde
+#set use_8bitmime
+set nowrite_bcc   # Exim does not remove Bcc headers
+set nomark_old
+set nosave_empty
+set nomarkers
+set xterm_set_titles
+set tmpdir=~/.mutt/.cache
+set signature=~/.signature
+set alias_file=`echo ${X:=$HOME}/.private/alias`
+set editor=editmail
+set query_command="lbdbq '%s'"
+set header_cache=~/.mutt/.cache/headers
+set message_cachedir=~/.mutt/.cache/bodies
+set rfc2047_parameters
+
+# ----------------------------------------------------------------------------
+# Onay gerektiren ayarlar
+# ----------------------------------------------------------------------------
+
+set abort_nosubject=no     # Abort, if message has no subject.
+set abort_unmodified=yes   # Abort, if message wasn't edited.
+set copy=yes               # Always save a copy of outgoing messages.
+set delete=yes             # Ask for confirmation when deleting messages?
+set honor_followup_to=yes  # Ask whether to honor Mail-Followup-To header
+set include=yes            # Quote message, when replying.
+set mime_forward=ask-no    # Use MIME when forwarding mails.
+set move=no                # Move mail-spool to $mbox?
+set pgp_verify_sig=no      # Don't automatically verify message signatures
+set postpone=ask-yes       # Ask for postponing when doing an Abort.
+set recall=ask-yes
+set print=ask-yes          # Ask whether you really want to print.
+set quit=yes               # Ask before quitting.
+set reply_to=ask-yes
+
+# ----------------------------------------------------------------------------
+# İleti görüntülenirken dikkate alınacak posta başlıkları
+# ----------------------------------------------------------------------------
+
+ignore * # Ignore all except below
+unignore from: subject to cc mail-followup-to reply-to\
+         date x-mailer user-agent x-url x-hostname-fqdn
+unignore organization organisation
+hdr_order From: Date: To: CCc: X-Hostname-Fqdn: X-Newsreader: X-Mailer: \
+          Organization: Organisation: User-Agent: X-Fnord:\
+	  X-WebTV-Stationery: X-Message-Flag: Newsgroups:\
+	  Reply-To: X-Spam-Status: x-spam-rule: x-SpamProbe: Subject:
+
+# ----------------------------------------------------------------------------
+# Biçimleme dizgileri
+# ----------------------------------------------------------------------------
+
+set forward_format="Fwd: [%a: %s]"
+#set index_format="%4C %Z %[!%d/%m] %-17.17F (%3l) %s"
+#set index_format="%4C %Z %[!%d/%m] %-17.17F   %s"
+#set index_format="%4C %Z %[!%d/%m] %-24.24n   %s"
+set index_format="%4C %Z %[!%d/%m] %-24.24n   %s"
+folder-hook . 'set index_format="%4C %Z %[!%d/%m] %-24.24n   %s"'
+folder-hook "sent" 'set index_format="%4C %Z %[!%d/%m] %-24.24t   %s"'
+folder-hook "Sent Mail" 'set index_format="%4C %Z %[!%d/%m] %-24.24t   %s"'
+#set pager_format="%S [%C] %n (%l) %s"
+set pager_format="%S [%C] %n   %s"
+#set folder_format="%F %-8.8u %-8.8g %d %8s %N %f"
+#set folder_format="%F %d %8s %N %f"
+set folder_format="%4C %d %N %f"
+set status_format="-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? \
+Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b? %?l? \
+%l?]---(%s/%S)-%>-(%P)---"
+
+# ----------------------------------------------------------------------------
+# Muhtelif
+# ----------------------------------------------------------------------------
+
+# Aliases for broken MUAs.
+charset-hook windows-1250 CP1250
+charset-hook windows-1251 CP1251
+charset-hook windows-1252 CP1252
+charset-hook windows-1253 CP1253
+charset-hook windows-1254 CP1254
+charset-hook windows-1255 CP1255
+charset-hook windows-1256 CP1256
+charset-hook windows-1257 CP1257
+charset-hook windows-1258 CP1258
+
+charset-hook us-ascii iso8859-9
+charset-hook windows-1254 iso8859-9
+charset-hook iso8859-1 iso8859-9
+charset-hook iso-8859-1 iso8859-9
+
+alternative_order text/plain
+
+# ----------------------------------------------------------------------------
+# İlklendir
+# ----------------------------------------------------------------------------
+
+set spoolfile="+INBOX"
+set folder = ~/Mail
+
+mailboxes `cd ~/Mail && for box in *; do printf "'+$box' "; done`
+unlists *
+unsubscribe *

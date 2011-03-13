@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Hafif ortamlarda kurulum yapma.
+anyattr base server && skiptask "baz veya sunucu ortamı"
+
+# "Bizim" tercih ettiğimiz sistem alternatiflerini kur
+
+# taşınabilirlik
+[ -x /usr/bin/update-alternatives ] || exit 0
+
+sudoattempt
+
+sudo sh -c '
+[ -x /usr/bin/gnome-text-editor ] && [ -x /usr/bin/leafpad ] &&
+	update-alternatives --set gnome-text-editor /usr/bin/leafpad ||:
+[ -x /usr/bin/gnome-www-browser ] && [ -x /usr/bin/chromium-browser ] &&
+	update-alternatives --set gnome-www-browser /usr/bin/chromium-browser ||:
+[ -x /usr/bin/x-www-browser ]  && [ -x /usr/bin/chromium-browser ] &&
+	update-alternatives --set x-www-browser /usr/bin/chromium-browser ||:
+[ -x /usr/bin/x-terminal-emulator ] && [ -x /usr/bin/xterm ] &&
+	update-alternatives --set x-terminal-emulator /usr/bin/xterm ||:
+[ -x /usr/bin/www-browser ] && [ -x /usr/bin/lynx-cur ] &&
+	update-alternatives --set www-browser /usr/bin/lynx-cur ||:
+' ||: 2>/dev/null

@@ -1,0 +1,42 @@
+[general]
+
+accounts = 00010011
+maxsyncaccounts = 1
+
+# Yardımcı işlevler (ör. mycmp) hangi dosyada?
+pythonfile = ~/.offlineimap.py
+
+[Account 00010011]
+
+localrepository = Local
+remoterepository = GoogleApps
+holdconnectionopen = yes
+# 3 dakika aralıklarla güncelleme yap
+autorefresh = 3
+
+[Repository Local]
+
+type = Maildir
+
+# Postalar yerelde hangi dizinde?
+localfolders = ~/Mail
+
+[Repository GoogleApps]
+# Gmail şemasını kullan
+# Dikkat!  giden postalar için de bir ayar gerekiyor.
+# Lütfen Mutt ayarlarında *-gmail dosyasına bakın.
+type = Gmail
+foldersort = mycmp
+maxconnections = 1
+realdelete = no
+folderfilter = lambda foldername: not re.search('([Tt]rash$|All Mail$|[Ss]pam|duplicates|junk|admin|msgid|lock|Tüm Postalar|Çöp kutusu)'.decode('utf-8').encode('imap4-utf-7'), foldername)
+nametrans = lambda foldername: re.sub('^\[Gmail\].', '', re.sub('INBOX', 'Gelen Kutusu', foldername.decode('imap4-utf-7').encode('utf-8')))
+
+# ------------------------------------------------------------------------------
+# Hesap bilgileri
+# ------------------------------------------------------------------------------
+
+# Kullanıcı adı - normal gmail hesabı kullanıyorsanız "<hesap>@gmail.com"
+remoteusereval = getuser()
+# Parola - DİKKAT! PAROLAYI BU DOSYAYA YAZMAYIN
+remotepasseval = gettoken()

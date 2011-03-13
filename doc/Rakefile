@@ -1,0 +1,47 @@
+# encoding: utf-8
+
+ENV['RONN_MANUAL'] = "19 Kılavuzu"
+ENV['RONN_ORGANIZATION'] = "19"
+
+task :default => ['man:default']
+
+namespace :man do
+	rule(/man\/man[0-9]\/[^.]+\.[0-9]$/ => [
+		proc { |tn| File.join('ronn', File.basename(tn) + '.ronn') }
+	]) do |t|
+		mkdir_p File.dirname(t.name)
+		sh "x-ronn -f -o #{t.name} #{t.source}"
+	end
+
+	rule(/html\/[^.]+\.[0-9]\/index\.html$/ => [
+		proc { |tn| File.join('ronn', File.basename(File.dirname(tn)) + '.ronn') }
+	]) do |t|
+		mkdir_p File.dirname(t.name)
+		sh "ronn -w -s toc -5 #{t.source} --pipe >#{t.name}"
+	end
+
+	MANFILES = FileList['ronn/*.ronn'].map do |f|
+		dest = File.basename(f).ext
+		sect = dest[-1]
+		File.join('man', "man#{sect}", dest)
+	end
+
+	HTMLFILES = FileList['ronn/*.ronn'].map do |f|
+		dest = File.basename(f).ext
+		File.join('html', dest, 'index.html')
+	end
+
+	desc "Kılavuz sayfalarını üret"
+	task :man => MANFILES
+
+	desc "HTML sayfaları üret"
+	task :html => HTMLFILES
+
+	desc "Ronn belgelerini işle"
+	task :default => [:man]
+
+	desc "Temizle"
+	task :clean do
+		rm_rf MANFILES + HTMLFILES
+	end
+end

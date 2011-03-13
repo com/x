@@ -1,0 +1,27 @@
+#!/bin/bash
+
+use tmux
+
+PREFIX=19
+DEFAULT=not
+
+# Argüman verilmişse denileni yap
+[ $# -eq 0 ] ||	exec x-tmux-window man "$@"
+
+if [ -n "$TMUX_CONTEXT_IS_VIM" ] && [ -z "$X_USE_ALT_MANUAL" ]; then
+	page=vim
+else
+	page=$(tmux_man_for)
+fi
+
+for m in "${PREFIX}-${page}" "$page" "$TMUX_CONTEXT"; do
+	if [ -n "$(man -w "$m" 2>/dev/null ||:)" ]; then
+		manpage="$m"
+		break
+	fi
+done
+
+[ -n "$manpage" ] || manpage=$DEFAULT
+prompt="Kılavuz Sayfası? ['$manpage' kılavuz sayfası için ENTER]"
+
+exec tmux command-prompt -p "$prompt" "run-shell 'ans=%%; x-tmux-window man \"\${ans:=$manpage}\"'"

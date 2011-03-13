@@ -1,0 +1,17 @@
+# öntanımlı komutu bir bash kabuğu olarak ayarla.
+set -g default-command 'exec /bin/bash'
+set -g default-shell /bin/bash
+# ne me lazım
+setw -g utf8 on
+# başlıkları etkinleştir
+set -g set-titles on
+# başlıkları daima eski haline getir
+set -g set-titles-string "#W"
+# ortam değişkenlerine neler eklenmeli
+set -ag update-environment "X X_ATTR"
+
+# jenerik ayarlar
+set -g bell-action none
+set -g history-limit 10000
+set -g display-panes-time 2000
+set -g display-time 2000

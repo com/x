@@ -1,0 +1,82 @@
+#!/bin/bash
+
+use std
+use package
+
+ensuredeb whohas
+
+PACKAGE="$1"
+VERSION="$2"
+
+if ! hasolddeb "$PACKAGE" "$VERSION"; then
+	cry "$PACKAGE zaten yeni sürümde."
+	exit 0
+fi
+
+sudoattempt
+
+[ -n "$HAS_APT_UPDATED" ] || xaptitude update ||:
+xaptitude install "$PACKAGE"
+
+if ! hasolddeb "$PACKAGE" "$VERSION"; then
+	say "$PACKAGE $VERSION veya daha yeni bir sürüme güncellendi."
+	exit 0
+fi
+
+DISTRO=$(lsb_release -si)
+CODENAME=$(lsb_release -sc)
+ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null ||:)
+
+whohas --strict --shallow -d ubuntu,debian "$PACKAGE" |
+while read line; do
+	set -- $line
+
+	distro="$1"
+	package="$2"
+	version="$3"
+	repository="$4"
+	url="$5"
+
+	if ! dpkg --compare-versions "$version" lt "$VERSION"; then
+		weight=100
+		if dpkg --compare-versions "$version" le "${closer:=$version}"; then
+			weight=$(($weight + 50))
+			closer=$version
+		fi
+		case "$distro" in
+		$DISTRO) weight=$(($weight + 1000)) ;;
+		esac
+		case "$repository" in
+		$CODENAME)  weight=$(($weight + 1000)) ;;
+		esac
+		printf "$weight\t$line\n"
+	fi
+done | sort -rn | head -n 1 |
+if read best && [ -n "$best" ]; then
+	set -- $best
+
+	weight="$1"
+	distro="$2"
+	package="$3"
+	version="$4"
+	repository="$5"
+	url="$6"
+
+	basename="${package}_${version}"
+
+	if baseurl=$(
+		wget "$url" -qO- |
+		sed -ne "s!.* href=[\"']\(.*://.*/${basename}\).dsc.*!\1!p"
+	) 2>/dev/null && [ -n "$baseurl" ]; then
+		sudoattempt
+		if debinstall "${baseurl}_${ARCH}.deb"; then
+			cry "$package $version sürümüne yükseltildi."
+		else
+			cry "$package $version sürümüne yükseltilirken hatayla karşılaşıldı."
+		fi
+	else
+		die "$package $version sürümü için deb paketi belirlenemedi."
+	fi
+else
+	die "$PACKAGE $VERSION sürümüne uygun bir paket bulunamadı."
+fi

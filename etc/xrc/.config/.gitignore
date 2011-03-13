@@ -1,0 +1,4 @@
+*
+!.gitignore
+!/autostart/
+!/autostart/x-xsession.desktop

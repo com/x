@@ -1,0 +1,259 @@
+.\" generated with Ronn/v0.7.3
+.\" http://github.com/rtomayko/ronn/tree/0.7.3
+.
+.TH "X" "7" "Mart 2011" "19" "19 Kılavuzu"
+.
+.SH "İSİM"
+\fBx\fR \- 19 Topluluğu Çalışma Ortamı
+.
+.SH "AÇIKLAMA"
+\fB19\fR topluluğu Özgür Yazılım/Açık Kaynak geleneğine bağlı bir teknik topluluktur\. \fB19/x\fR, \fB19\fR topluluğu üyelerinin çalışma tarzını bir ölçüde kodifiye eden yapılandırma dosyaları, yardımcı programlar, kitaplıklar ve dokümanlardan oluşan bir uçbirim ("terminal") çalışma ortamıdır\.
+.
+.SH "BAŞLANGIÇ"
+\fB19/x\fR kurulumu başarıyla tamamlanmışsa oturum açıldığında çalışma ortamı devreye girecektir\. Tipik bir kullanım senaryosu olarak, örneğin GNOME gibi bir masaüstü ortamında çalışıyorsanız açılış sırasında xterm(1) ve onun üzerinde tmux(1) çalışan bir uçbirim penceresiyle karşılaşacaksınız\. SSH ile giriş yaptığınız bir makinede (sunucudaki kabuk hesabınızda \fB19/x\fR kurulu olması şartıyla) giriş işlemini takiben tmux çalışacaktır\.
+.
+.P
+Tmux uçbirim çoğullayıcı ekranının altında (kullandığınız açılış profiline göre değişen sayıda) o oturumda açılmış olan uçbirim pencerelerinin ismi ve numarası gösterilmektedir, örneğin "\fB0:bash\fR" \fB0\fR nolu pencerede \fBbash\fR kabuğunun çalıştığını göstermektedir\. Pencere numaralarını kullanarak pencereler arasında geçiş yapabilir veya yeni pencereler (programlar) oluşturabilirsiniz\. \fB19/x\fR tmux ekranında (durum satırı dediğimiz) bu alt kısımda pencere numaralarına ek olarak her zaman göz önünde bulundurulması yararlı olabilecek başka bazı bilgiler de vardır\. Sol tarafta (sırasıyla) son 1, 5 ve 15 dakikada işlemci yükünün aldığı değerler ("load average"), sağ tarafta ise tarih, saat ve makine ismi görüntülenmektedir\.
+.
+.P
+Tmux\'ta tüm işlemler "ön ek" tuşu olarak ayarlanmış bir tuşa bastıktan sonra ilgili işlev için atanmış tuşu tuşlamakla gerçekleşmektedir\. \fB19/x\fR çalışma ortamında \fBc\-a\fR tuşu (\fBCtrl\fR ile birlikte \fBa\fR tuşuna basın) ön tanımlı tmux ön ek tuşu olarak ayarlıdır\. Örneğin \fB0\fR numaralı pencereye geçiş için önce \fBc\-a\fR tuş kombinasyonunu kullanmanız ve peşinden \fB0\fR tuşuna basmanız gerekir (bu tuş vuruşlarını \fBc\-a 0\fR olarak gösteriyoruz)\.
+.
+.P
+Yeni bir kabuk ortamı açmak için \fBc\-a c\fR, yeni bir mc(1) görsel kabuğu açmak için ise \fBc\-a C\fR tuşunu kullanabilirsiniz\. Çalıştırılan her program bir pencere numarası alacak ve etkin pencere olarak ayarlanacaktır\. Sıklıkla iki pencere arasında geçiş yapmak istiyorsanız pencere numaralarını kullanmak yerine \fBc\-a a\fR tuş kombinasyonunu kullanabilirsiniz\. Örneğin yeni bir pencereye geçtiğinizde bir önceki etkin pencereye geçiş için \fBc\-a a\fR tuşuna basın ve yeni pencereye geri dönmek için yine aynı tuşu kullanın\.
+.
+.P
+Bu şekilde çalıştırılan bir program sonlandığında ilgili pencere de otomatik olarak kapatılır\. Siz istemedikçe sonlanmayan etkileşimli programlarda (örneğin bash kabuğu) pencereyi kapatmak için program tarafından sunulan "programdan çıkış" işlevini kullanmanız gerekir\. Örneğin bash kabuğu çalıştıran bir pencereyi kapatmak için o pencere etkinken \fBexit\fR yazın veya daha pratiği \fBc\-d\fR tuşuna basın\. Herhangi bir sorundan dolayı program sonlanmıyor ve pencere hep açık (ve çoğunlukla tepkisiz) kalıyorsa \fBc\-a k\fR tuş kombinasyonunu kullanabilirsiniz\.
+.
+.P
+\fB19/x\fR çalışma ortamı kılavuz (man) dosyalarıyla dokümante edilmiştir\. Bu kılavuz belgelerini man(1) komutuyla kabuk ortamında görüntüleyebilir veya önerilen yöntem olarak, uçbirimde herhangi bir anda \fBF1\fR tuşuna basarak man programını çağırabilirsiniz\. \fBF1\fR tuşuyla etkinleştirilen kılavuz görüntüleme işlemi büyük ölçüde bağlam duyarlıdır\. İlgili kılavuz "önerisi" (bağlam) pencere başlığına bakarak belirlenir ve öneriyi (\fBENTER\fR tuşlayarak) kabul etmeniz halinde o sırada etkin olan pencereyle ilgili yardım görüntülenir\. İstemediğiniz bir bağlam belirlenmişse veya farklı bir kılavuz dosyasını görüntülemek istiyorsanız tmux komut isteminde kılavuz belgesinin ismini yazmanız yeterli olacaktır\.
+.
+.P
+Bu kısımda \fB19/x\fR çalışma ortamını kullanabilmeniz için başlangıçta yeterli olabilecek asgari bilgiler özetlenmiştir\. Tmux başta olmak üzere \fB19/x\fR bileşenleri için ayrıntılı bilgi edinmek için lütfen ilgili kılavuz belgelerini okuyun\. Her hangi bir bileşenle ilgili \fB19/x\fR özellikleri için "\fB19\-\fR" ön ekiyle isimlendirilmiş kılavuz belgesini okuyun\. Örneğin vim(1) için 19\-vim(7), yani basitçe \fBman 19\-vim\fR komutunu kullanabilir veya Vim çalışan bir pencerede \fBF1\fR tuşuna basabilirsiniz\.
+.
+.SH "BİLEŞENLER"
+\fB19/x\fR çalışma ortamının temel bileşenleri bash(1) kabuğu ve tmux(1) uçbirim çoğullayıcıdır\. Her koşulda gerekecek bu temel bileşenlerin yanısıra; xterm(1) X uçbirimi emülatörü, vim(1) programcı editörü, mc(1) görsel kabuğu, mutt(1) posta okuyucu ve weechat\-curses(1) sohbet programı da \fB19/x\fR çalışma ortamında desteklenen veya kullanılması özendirilen başlıca araçlardır\. Desteklenen veya önerilen araçlar hakkında gerekli özet bilgiyi bu kısımda bulacaksınız\.
+.
+.SS "İlkeler"
+Üyelerin öncelikle ev dizinlerine kurulacak şekilde tasarlanmış olan bu ortamın tasarım ve gerçeklemesinde genel olarak şu ilkeler izlenmiştir:
+.
+.TP
+Geleneklere uygunluk
+Kendine özgü ağır bir uygulama veya yapılandırma çatısı olmaya çalışmak yerine mevcut araçları kullanır ve yerleşmiş konvansiyonları izlemeye çalışır\.
+.
+.TP
+Taşınabilirlik
+Çalışma ortamı için asgari gereksinim bash(1) kabuk ortamı başta olmak üzere \fIBİLEŞENLER\fR kısmında listelenen araçların çalıştırılabileceği bir UNIX ortamıdır\. \fB19/x\fR bu koşulları sağlayan tüm dağıtım (ör\. Debian GNU/Linux) veya işletim sistemlerinde (ör\. OpenBSD, Mac OS X®) çalıştırılabilir\. Ayrıca ortam Grafik Arayüz bulunmayan sunucular veya kısıtlı uçbirim özelliklerine sahip sanal konsollarda da (ör\. GNU/Linux sanal konsolları) çalıştırılabilir\.
+.
+.TP
+Güncellenebilirlik
+\fB19/x\fR çalışma ortamında yapılan değişiklikler git(1) sürüm takip sistemiyle yönetilmektedir\. İlk kurulum da dahil olmak üzere tüm konuşlandırma ("deployment") eylemleri git(1) ile gerçekleşmektedir\.
+.
+.TP
+Özelleştirilebilirlik
+Çalışma ortamı kapsamı değişen düzeylerde özelleştirilebilir ve \fIÖZELLEŞTİRMELER\fR kısmında önerilen kurallara uyulması kaydıyla bu özelleştirmeler ortam güncellemelerinde de korunur\.
+.
+.TP
+Geliştirici dostluğu
+\fB19/x\fR son kullanıcıya yönelik bir çalışma ortamı olarak tasarlanmamıştır\. Temel UNIX bilgisi ve en azından komut satırına aşina olmayı gerektirir\. \fB19/x\fR menüsü başta olmak üzere çalışma ortamında sunulan yardımcı betikler, kullanıcı bilgisinin yetersizliğine yönelik olarak \fIdeğil\fR, sık kullanılabilecek olmasından dolayı eklenmiştir\.
+.
+.P
+TODO Yazılacak
+.
+.SH "İLKLENDİRME"
+\fB19/x\fR çalışma ortamı \fB~/\.x\fR dosyasıyla ilklendirilmektedir\. Bazı tercihlerin yapılmasına da olanak sağlayan bu dosyanın (herhangi bir tercih yapılmasa bile) en azından varlığı gerekmektedir\. Bu dosya diğer \fB19/x\fR ilklendirme ve yapılandırma betikleri tarafından ithal edilmektedir\. Dosyada sadece POSIX kabuk özellikleri kullanılması, örneğin Bash\'e özgü özelliklerden kaçınılması gerekir\. Mutlaka Bash\'e özgü bir özellik kullanmak gerekiyorsa ilgili satırları aşağıdaki gibi koşullu yapılmalıdır:
+.
+.IP "" 4
+.
+.nf
+
+    if [ \-n "$BASH" ]; then
+            \.\.\.
+    fi
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Bu dosyanın yokluğu halinde \fB19/x\fR ilklendirme sistemi devreden çıkacaktIr\. \fBDosyada yapılabilecek hatalı bir değişiklik sisteme girişte sorunlara yol açacaktır\fR\. Dosyayı düzenledikten sonra aşağıdaki komutu çalıştırarak en azından basit sözdizimi denetimi yapılmasında yarar vardır:
+.
+.IP "" 4
+.
+.nf
+
+     sh \-n ~/\.x
+.
+.fi
+.
+.IP "" 0
+.
+.SS "Değişkenler"
+.
+.TP
+\fBX_SCREEN\fR
+Açılışta çalışacak uçbirim çoğullayıcı\. Değer olarak ilgili programın mutlak dosya yolu veya \fBPATH\fR\'te tanımlı ise kısaca adı verilebilir\.
+.
+.IP
+Bu değişken \fBlogin\fR\'de dikkate alınır\.
+.
+.TP
+\fBX_EDITOR\fR
+Grafik ortamda (her ortamda \fBdeğil\fR) kullanılacak metin düzenleyici\. Değer olarak ilgili programın mutlak dosya yolu veya \fBPATH\fR\'te tanımlı ise kısaca adı verilebilir\.
+.
+.IP
+Bu değişken \fBxsession\fR\'da dikkate alınır\.
+.
+.TP
+\fBX_TERM\fR
+Açılışta çalıştırılacak X uçbirimi\. Değer olarak ilgili programın mutlak dosya yolu veya \fBPATH\fR\'te tanımlı ise kısaca adı verilebilir\.
+.
+.IP
+Bu değişken \fBxsession\fR\'da dikkate alınır\.
+.
+.SS "Oturum Nitelikleri"
+Oturum nitelikleri \fB19/x\fR oturum ilklendirmesinde gerçekleştirilecek eylemleri koşullu hale getirmek amacıyla tasarlanmış sözcüklerdir\. Bu sözcükler boşluk kullanılarak \fBX_ATTR\fR isimli özel değişkene eklenmeleri halinde etkin olmaktadır\. Nitelik eklemesi, yani niteliğe karar verilmesi işlemi, yapılandırma dosyalarında çoğunlukla ilklendirmenin erken safhalarında (ör\. \fBcommon\fR) dinamik olarak gerçekleştirilir\. Çoğunlukla aynı anda birden fazla nitelik etkin olabilir\.
+.
+.P
+\fBX_ATTR\fR değişkenine doğrudan erişmek ve yazmak yerine aşağıda belirtilen işlevler kullanılmalıdır\.
+.
+.IP "\(bu" 4
+\fBsetattr\fR: Nitelik ata\. Örnek:
+.
+.IP "" 4
+.
+.nf
+
+setattr foo
+.
+.fi
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+\fBanyattr\fR: Verilen niteliklerden herhangi birisi tanımlıysa doğru döner (\fBVEYA\fR işlemi)\. Örnek:
+.
+.IP
+if anyattr foo bar; then
+.
+.IP "" 4
+.
+.nf
+
+        # foo veya bar nitelikleri tanımlıysa bir şey yap
+fi
+.
+.fi
+.
+.IP "" 0
+
+.
+.IP "\(bu" 4
+\fBallattr\fR: Verilen niteliklerin tümü varsa doğru döner (\fBVE\fR işlemi)\. Örnek:
+.
+.IP
+if allattr foo bar; then
+.
+.IP "" 4
+.
+.nf
+
+        # foo veya bar niteliklerinin tümü tanımlıysa bir şey yap
+fi
+.
+.fi
+.
+.IP "" 0
+
+.
+.IP "" 0
+.
+.P
+Bu işlevler (yukarıda açıklanan anlamda) oturum niteliklerini belirlemek dışında oturum tercihleri için de kullanılırlar\. Bkz\. \fIStandart Nitelikler\fR\.
+.
+.SS "Örnekler"
+Oturumun grafik ortamda gerçekleştiğini anlatmak için \fBgui\fR niteliği seçilmişse bu nitelik şu şekilde etkinleştirilebilir:
+.
+.IP "" 4
+.
+.nf
+
+if [ \-n "$DISPLAY" ]; then
+        setattr gui
+fi
+.
+.fi
+.
+.IP "" 0
+.
+.P
+Nitelik tayini yapıldıktan sonra bu nitelik şu şekilde kullanılabilir:
+.
+.IP "" 4
+.
+.nf
+
+if anyattr gui; then
+        EDITOR="/usr/bin/gvim \-f"
+fi
+.
+.fi
+.
+.IP "" 0
+.
+.P
+TODO Yazılacak
+.
+.SS "Standart Nitelikler"
+Aşağıdaki nitelikler belirtilen standart anlamlarda yorumlanmalıdır\.
+.
+.TP
+\fBmain\fR
+Kullanıcının ana çalışma makinesi\.
+.
+.TP
+\fBgui\fR
+Grafik ortamda çalışan bir makine\. Ör\. X Window System çalıştıran bir makine\.
+.
+.TP
+\fBdesktop\fR
+Grafik masaüstü yöneticisi (ör\. GNOME, XFCE) çalıştıran bir makine\.
+.
+.TP
+\fBserver\fR
+Sunucu niteliğinde kullanılan bir makine\.
+.
+.TP
+\fBdumb\fR
+Renk desteği başta olmak üzere terminal özellikleri zayıf bir ortam\. Ör\. Yerelde sanal konsollardan (virtual terminal) erişilen bir makine\.
+.
+.TP
+\fBtc\fR
+İnce istemci ("thin client")\.
+.
+.TP
+\fBssh\fR
+SSH yoluyla erişilmiş bir makine\.
+.
+.TP
+\fBunsafe\fR
+Güvenli olmayan bir makine\.
+.
+.SS "Standart Tercihler"
+.
+.IP "\(bu" 4
+\fBno\-terminal\fR: Açılışta uçbirim çalıştırma\.
+.
+.IP "\(bu" 4
+\fBno\-screen\fR: Açılışta uçbirim çoğullayıcı çalıştırma\.
+.
+.IP "\(bu" 4
+\fBno\-fullscreen\fR: Açılışta çalıştırılan uçbirimi tam ekran yapma\.
+.
+.IP "" 0
+.
+.SH "ÖZELLEŞTİRMELER"
+TODO Yazılacak
+.
+.SH "TELİF HAKKI"
+Copyright (C) 2011 19 tayfası \fIhttp://ondokuz\.biz/\fR

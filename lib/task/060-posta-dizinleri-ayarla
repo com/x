@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Baz kurulumlarda çık.
+anyattr base && skiptask "baz sistem"
+
+# Varlığı gereken dizinler
+MAILDIR=Mail
+MUTT_CACHE=.mutt/.cache
+
+# Hedef yapılandırma dosyaları
+MSMTPRC="msmtprc"
+
+# Gerekli bazı dizin ve dosyalar
+for f in "etc/msmtp/${MSMTPRC}" ".${MSMTPRC}" "${PRIVATEDIR:=.private}/${MSMTPRC}"; do
+	if [ -f "$f" ]; then
+		touchsafe "$f"
+	fi
+done
+
+mkdir -p "$MUTT_CACHE"
+mkdir -p "$MAILDIR"
+chmod 700 "$MAILDIR"

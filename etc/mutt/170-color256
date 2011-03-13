@@ -1,0 +1,40 @@
+color normal     white black
+color attachment brightyellow black
+color hdrdefault color153 color233
+color signature  color240 color232
+color indicator  brightwhite color240
+color markers    brightred black
+color status     black color111
+color tilde      black black
+color tree       color198 black
+
+color header     brightyellow black 'from:'
+color header     color120 black 'subject:'
+
+color body       brightblue default  "((ftp|http|https)://|news:)[^ >)\"\t]+"
+color body       color198 default "(http|https|git)://gist[.]github[.]com/.*"
+color body       cyan  default "[-a-z_0-9.+]+@[-a-z_0-9.]+"
+color body       color198 default "(^| )\\*[-a-z0-9*]+\\*[,.?]?[ \n]"
+color body       green default "(^| )_[-a-z0-9_]+_[,.?]?[\n]"
+color body       color198 default "(^| )\\*[-a-z0-9*]+\\*[,.?]?[ \n]"
+color body       green default "(^| )_[-a-z0-9_]+_[,.?]?[ \n]"
+
+color quoted     color107 color232
+color quoted1    color66  color232
+color quoted2    color32  color232
+color quoted3    color30  color232
+color quoted4    color99  color232
+color quoted5    color36  color232
+color quoted6    color114 color232
+color quoted7    color109 color232
+color quoted8    color41  color232
+color quoted9    color138 color232
+
+color index      yellow black  ~N        # New
+color index      yellow black  ~O        # Old
+color index      color153 black  '~P'    # Mail from me
+color index      magenta black  ~F       # Flagged
+color index      brightyellow black  ~T  # Tagged
+color index      red  black  ~D          # Deleted
+
+color sidebar_new black yellow

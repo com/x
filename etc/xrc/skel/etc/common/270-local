@@ -1,0 +1,8 @@
+# Kişisel Ayarlar
+
+# Aşağıda listelenen makineleri "ana" makine kabul ediyoruz.
+case "${HOSTNAME:=$(hostname)}" in
+kant|spinoza|marx|descartes|wittgenstein|averroes|ghazali|farabi)
+	setattr main
+	;;
+esac

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Mutt ile dosya yolla.
+#
+# Mutt'da 'set hostname="foo.bar"' ayarı yapılırsa alan adı verilmeyen alıcı
+# adreslerde '@foo.bar' kullanılır.  Bu ayarın isteğinize uygun şekilde
+# yapıldığına emin olun.
+
+use std
+
+hascommand mutt || die "Mutt kurulu olmalı."
+
+FILES=("$@")
+
+if [ ${#FILES[@]} -eq 0 ]; then
+	while :; do
+		ask "Ek dosya [ENTER son]"
+		[ -n "$REPLY" ] || break
+		eval f="$REPLY"
+		f=$(readlink -f "$f")
+		if [ -f "$f" ]; then
+			FILES+=("$f")
+		else
+			cry "Böyle bir dosya yok: '$f'"
+		fi
+	done
+else
+ 	for ((i=0; i<${#FILES[@]}; i++)); do
+		f=$(readlink -f "${FILES[$i]}")
+		[ -f "$f" ] || die "Böyle bir dosya yok: '$f'"
+	done
+fi
+
+ask "Kime [birden fazla alıcı için boşluk kullanın]"
+[ -n "$REPLY" ] || die "Çıktım."
+TO="$REPLY"
+
+ask "Konu" "Ekte dosya - $(date +'%Y-%m-%d %H:%M:%S')"
+SUBJECT="$REPLY"
+ask "İleti?" ""
+BODY="$REPLY"
+
+if echo "$BODY" | mutt -s "$SUBJECT" -a "${FILES[@]}" -- $TO; then
+	say "Gönderildi."
+else
+	die "Gönderim başarısız."
+fi

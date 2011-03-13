@@ -1,0 +1,10 @@
+; 19x terminali daima ilk çalışma alanında ve tam ekran.
+(if (and
+      (is (window_name) "x")
+      (or
+        (contains (window_class) "-terminal")
+        (contains (window_class) "XTerm")
+      )
+    )
+  (begin fullscreen (set_workspace 1))
+)

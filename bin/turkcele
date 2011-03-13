@@ -1,0 +1,139 @@
+#!/bin/bash
+
+set -e
+
+LOCALESDIR=/usr/share/i18n/locales
+MYSQLCONFDIR=/etc/mysql/conf.d
+
+AREA=Europe
+ZONE=Istanbul
+
+[ -x /usr/bin/X ] || IS_HEADLESS=yes
+
+# eksik deb paketleri
+missingdeb() {
+	local pkg missing
+	for pkg; do
+		if [ -z "$(dpkg-query -W -f='${Installed-Size}' "$pkg" 2>/dev/null ||:)" ]; then
+			missing="$missing $pkg"
+		fi
+	done
+
+	echo $missing
+}
+
+# apt-get sarmalayıcı
+xaptget() {
+	local command
+	[ $# -gt 0 ] || return 0
+
+	command="$1"
+	shift
+
+	sudo apt-get $command --option APT::Get::HideAutoRemove=1 \
+		--quiet --yes --force-yes --no-install-recommends --ignore-missing "$@"
+}
+
+if [ $(id -u) -ne 0 ]; then
+	echo >&2 "Yönetici hakları gerekiyor."
+	exit 1
+fi
+
+if ! [ -x /usr/bin/dpkg ]; then
+	echo >&2 "Bu betik sadece Debian tabanlı sistemlerde çalıştırılmalı."
+	exit 1
+fi
+
+# Yereller mutlaka kurulu olmalı.
+[ -z "$(missingdeb locales)" ] || xaptget install locales
+
+# Eksik yerel varsa üret.
+echo >&2 "Eksik yereller denetleniyor..."
+for n in "tr_TR.UTF-8" "tr_TR" "en_US.UTF-8"; do
+	/usr/sbin/validlocale "$n" 2>/dev/null | if read locale charset; then
+		if [ -n "$locale" ] && [ -n "$charset" ]; then
+			if [ -f "${LOCALESDIR}/${locale}" ]; then
+				input=$locale
+			else
+				input=$(echo $locale | sed 's/\([^.]*\)[^@]*\(.*\)/\1\2/')
+			fi
+			if /usr/bin/localedef -i "$input" -c -f "$charset" \
+				-A /usr/share/locale/locale.alias "$locale"; then
+				echo >&2 "Eksik olan '$n' yereli üretildi."
+			fi
+		fi
+	fi
+done
+
+# Öntanımlı yerel Türkçe, fakat bu bir "headless" sistem ise İngilizce UTF-8.
+X_LANG=tr_TR.UTF-8; [ -z "$IS_HEADLESS" ] || X_LANG=en_US.UTF-8
+
+if [ -x /usr/sbin/update-locale ]; then
+	/usr/sbin/update-locale LANG=$X_LANG
+else
+	echo "LANG=$X_LANG" >/etc/default/locale
+fi
+
+# Debconf veritabanını bir kez daha tohumlayalım.
+(
+	. /usr/share/debconf/confmodule
+
+	db_set debian-installer/locale "tr_TR.UTF-8"
+	db_set debian-installer/country "TR"
+	db_set debian-installer/keymap "trqu"
+	db_set debian-installer/language "tr"
+
+	db_set tzdata/Areas "$AREA"
+	db_set tzdata/Zones/$AREA "$ZONE"
+
+	db_set console-setup/charmap47 "UTF-8"
+	db_set console-setup/codeset47 "Lat15"
+	db_set console-setup/fontface47 "Terminus"
+	db_set console-setup/fontsize-text47 "16"
+	db_set console-setup/fontsize-fb47 "16"
+	db_set console-setup/fontsize "16"
+
+	db_set console-setup/layout "Turkey"
+	db_set console-setup/layoutcode "tr"
+
+	db_go
+) 2>/dev/null ||:
+
+# Sessiz çalışalım.
+export DEBIAN_FRONTEND=noninteractive
+
+# Otomatik tanıma için biraz daha yardım.
+export LC_ALL=tr_TR.UTF-8
+
+# Önce eksik paketleri kuralım.
+missings=$(missingdeb console-terminus console-setup)
+[ -z "$missings" ] || xaptget install $missings
+
+# Sistem zaman dilimi.
+echo >&2 "Zaman dilimi yapılandırılıyor..."
+dpkg-reconfigure --force tzdata 2>/dev/null ||:
+
+# Konsol.
+echo >&2 "Konsol yapılandırılıyor..."
+dpkg-reconfigure --force console-setup 2>/dev/null ||:
+
+# Diğer Türkçe dokunuşlar.
+if [ -n "$IS_HEADLESS" ] || [ -d "$MYSQLCONFDIR" ]; then
+	# MySQL'de öntanımlı UTF-8 desteğine rağmen ortaya çıkan saçma sapan
+	# UTF-8 problemlerinden bıktık.
+	if ! [ -f $MYSQLCONFDIR/utf8.cnf ]; then
+		echo >&2 "MySQL UTF-8 ayarları iyileştiriliyor..."
+		mkdir -p $MYSQLCONFDIR
+		cat >$MYSQLCONFDIR/utf8.cnf <<'EOF'
+[mysqld]
+init_connect=’SET collation_connection = utf8_general_ci’
+init_connect=’SET NAMES utf8′
+default-character-set=utf8
+character-set-server=utf8
+collation-server=utf8_general_ci
+skip-character-set-client-handshake
+EOF
+	fi
+fi
+
+echo >&2 "Sistem yereli $X_LANG olarak ayarlandı."

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+PRIVATEDIR="${X:=$HOME}/.private"
+
+[ -r "$PRIVATEDIR" ] || exit 0
+
+if [ $# -gt 0 ]; then
+	token="${PRIVATEDIR}/${1}"
+	if [ ! -r "$token" ]; then
+		case "$token" in
+		*.base64)
+			;;
+		*)
+			token="${token}.base64"
+			[ -r "$token" ] || exit 0
+			;;
+		esac
+	fi
+	case "$token" in
+	*.base64)
+		[ -x /usr/bin/base64 ] || exit 0
+		salt="${PRIVATEDIR}/salt"
+		if [ -r "$salt" ]; then
+			/bin/cat "$salt"
+		else
+			echo
+		fi | /bin/cat "$token" | /usr/bin/base64 -d
+		;;
+	*.gpg)
+		# TODO
+		;;
+	*.plain|*.clear)
+		cat "$token"
+		;;
+	esac
+fi

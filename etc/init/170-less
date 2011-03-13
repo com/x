@@ -1,0 +1,10 @@
+# 256 renkli less.
+if ! anyattr dumb; then
+	export LESS_TERMCAP_mb=$'\E[38;5;111m'
+	export LESS_TERMCAP_md=$'\E[38;5;111m'
+	export LESS_TERMCAP_me=$'\E[0m'
+	export LESS_TERMCAP_se=$'\E[0m'
+	export LESS_TERMCAP_so=$'\E[38;5;120m'
+	export LESS_TERMCAP_ue=$'\E[0m'
+	export LESS_TERMCAP_us=$'\E[38;5;198m'
+fi

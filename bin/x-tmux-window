@@ -1,0 +1,34 @@
+#!/bin/bash
+
+case "$COLUMNS" in
+""|0|80)
+	# Uçbirim boyutları tanımlı değil veya öntanımlı bir değere ayarlıysa
+	# sütun sayısını bulmaya çalış.  Bu noktada tput (cols) da çoğunlukla
+	# bir sonuç vermeyecektir, bu nedenle sütun sayısını öğrenmek üzere
+	# referans alınacak bir aygıt ile stty'yi kullan.
+
+	pts=$(
+		tmux list-clients | head -n1 | cut -d: -f1 2>/dev/null ||:
+	)
+	if [ -n "$pts" ]; then
+		COLUMNS=$(
+			stty -F "$pts" size | awk '{ print $NF }' 2>/dev/null ||:
+		)
+	fi
+;;
+esac
+
+if [ ${COLUMNS:=80} -gt 140 ]; then
+	remaining=$(($COLUMNS - 80))
+	if [ $remaining -gt 80 ]; then
+		MANWIDTH=80
+	else
+		MANWIDTH=$remaining
+	fi
+
+	COLUMNS=$MANWIDTH
+	export COLUMNS MANWIDTH
+	exec tmux split-window -h -l $MANWIDTH "exec $*"
+else
+	exec tmux new-window "exec $*"
+fi

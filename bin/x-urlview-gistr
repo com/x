@@ -1,0 +1,3 @@
+#!/bin/sh
+export BROWSER='x-terminal-emulator -e gistr'
+egrep 'gist[.]github[.]com' | exec urlview

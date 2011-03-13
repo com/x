@@ -1,0 +1,35 @@
+if ! tty -s; then
+	touchsafe "$HOME/.xsession-errors"
+	exec >>"$HOME/.xsession-errors" 2>&1
+fi
+
+sourcedir "$X/etc/xsession"
+
+anyattr no-terminal && return 0
+
+terminal=$(selectalternatives X_TERM xterm rxvt gnome-terminal konsole)
+if [ -z "$terminal" ]; then
+	echo >&2 "Uçbirim bulunamadı veya çalıştırılabilir değil."
+	return 0
+fi
+
+# Uçbirim başlığı devilspie tarafından yakalanabilir.  Boşluk kullanmayın!
+title="x"
+
+case "$terminal" in
+xterm|*/xterm|rxvt|*/rxvt)
+	exec $terminal -geometry 80x30 -title $title -e ${SHELL:-/bin/bash} -l &
+	;;
+gnome-terminal|*/gnome-terminal)
+	exec $terminal --geometry 80x30 --title $title -e ${SHELL:-/bin/bash} -l &
+	;;
+guake|*/guake|tilda|*/tilda)
+	# Launchpad #621927
+	TERM=xterm-256color
+	export TERM
+	exec $terminal &
+	;;
+*)
+	# nop
+	;;
+esac

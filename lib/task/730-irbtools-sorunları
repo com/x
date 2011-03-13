@@ -1,0 +1,14 @@
+#!/bin/bash
+
+zuckerd=/var/lib/gems/1.9.1/gems/zucker-9
+
+[ -d $zuckerd ] || noproblem
+
+knownproblem "irbtools'un bağımlı olduğu zucker gem'inin dosya izinleri hatalı"
+
+sudoattempt
+sudo sh -c "
+	find $zuckerd -type f | xargs chmod 0644
+" ||:
+
+fixedproblem

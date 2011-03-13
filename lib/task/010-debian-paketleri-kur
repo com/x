@@ -1,0 +1,241 @@
+#!/bin/bash
+
+# ------------------------------------------------------------------------------
+# Her makinede (grafik ortam bulunmayan sunucular dahil) kurulacak paketler
+#
+# Dikkat!  Bu kategorideki paketlerin ağır bir bağımlılığı olmamalı.  Özellikle
+# X Window'a bağımlı hiçbir paket olmamalı.
+# ------------------------------------------------------------------------------
+
+DEB_BASE="
+at
+bash-completion
+bmon
+ccze
+console-setup
+console-terminus
+curl
+dnsutils
+fail2ban
+git
+htop
+iselect
+less
+libyaml-tiny-perl
+lsof
+mc
+moreutils
+mtr-tiny
+pciutils
+pdmenu
+psmisc
+rsync
+ssh
+sudo
+tcpdump
+telnet
+tmux
+vim
+whohas
+whois
+"
+
+# ------------------------------------------------------------------------------
+# Tipik bir çalışma istasyonunda kurulacak paketler
+#
+# Dikkat!  Bu kategoride grafik ortamda çalışabilecek paketler olabilir.  Fakat
+# paket bağımlılığı sorunları azaltmak için karmaşık bağımlılığa sahip paketler
+# kurmaktan kaçının.
+# ------------------------------------------------------------------------------
+
+DEB_STANDARD="
+anacron
+bti
+byobu
+bzip2
+ca-certificates
+cowsay
+cplay
+devilspie
+dnstracer
+etckeeper
+file
+github-cli
+gitk
+guake
+ipcalc
+jpegoptim
+lbdb
+leafpad
+libhighline-ruby1.9.1
+libio-socket-ssl-perl
+liblist-moreutils-perl
+liblocale-ruby1.8
+liblocale-ruby1.9.1
+liblwp-useragent-determined-perl
+libtcltk-ruby1.9.1
+libwww-perl
+libxml2-dev
+libxslt1-dev
+locales
+lynx-cur-wrapper
+maildir-utils
+markdown
+meld
+mime-support
+mlocate
+moc
+moc-ffmpeg-plugin
+mr
+mutt-patched
+ncurses-term
+netpbm
+numlockx
+offlineimap
+p7zip-full
+pdmenu
+pngnq
+qalc
+recode
+sgrep
+sharutils
+strace
+tig
+time
+t-prot
+ttf-dejavu
+unclutter
+units
+unrar
+unzip
+urlview
+vim-gtk
+vlock
+wajig
+wodim
+xbindkeys
+xclip
+xcowsay
+xfonts-terminus
+xterm
+"
+
+# ------------------------------------------------------------------------------
+# Geliştirme ortamı olarak kullanacağımız bir makinede kurulacak ekstra paketler
+# ------------------------------------------------------------------------------
+
+DEB_EXTRA="
+bitlbee
+build-essential
+byzanz
+chromium-browser
+cmake
+cscope
+devscripts
+exuberant-ctags
+git-buildpackage
+glibc-doc
+graphviz
+gtk2-engines-wonderland
+highlight
+idle
+imagemagick
+inkscape
+ipython
+latex-beamer
+libbsd-dev
+libfacets-ruby1.9.1
+libglib2.0-dev
+libglib2.0-doc
+librspec-ruby1.9.1
+libtemplate-multilingual-perl
+libtemplate-perl
+manpages-dev
+manpages-posix
+mercurial
+muttprint
+octave3.2
+pandoc
+pdfjam
+pep8
+perl-doc
+pgf
+php5-cli
+pyflakes
+python-doc
+python-docutils
+python-matplotlib
+python-numpy
+python-pygments
+sloccount
+subversion
+t1-xfree86-nonfree
+tango-icon-theme
+tcc
+texlive-fonts-recommended
+texlive-lang-french
+texlive-lang-other
+texlive-latex-extra
+texlive-latex-recommended
+texlive-publishers
+texlive-xetex
+tk-tile
+ttf-inconsolata
+ttf-ubuntu-title
+ttf-xfree86-nonfree
+ubuntu-dev-tools
+vim-gnome
+weechat
+wireshark
+xfonts-scalable
+"
+
+if ! anyattr server && anyattr gui; then
+	if [ "$IS_NEWINSTALL" ]; then default=e; else default=h; fi
+	if yesno "Ekstra Debian paketleri kurulsun mu?" $default; then
+		setattr fat
+	fi
+fi
+
+sudoattempt
+
+if [ -z "$HAS_APT_UPDATED" ]; then
+	say "Paket indeksleri güncelleniyor..."
+	xaptitude update ||:
+fi
+
+# XXX  Bu bir hek.  Apt/Aptitude müdahalesiz çalıştırılacak.  Bu araçlar fazla
+# akıllı olmaya çalıştığında nadir de olsa GNOME paketlerini silebiliyor.
+# Basitçe şunu yapıyoruz.  Sistemde bu noktada GNOME kurulu ise kurulacak
+# paketlere bunları da ekleyip paket bağımlılıklarının çözülmesinde artifakt
+# oluşmasını engellemeye çalışıyoruz.  Sistemde GNOME kurulu değilse bu
+# satırların bir etkisi yok.
+
+for p in gnome gnome-desktop-environment; do
+	# paket sistemde **zaten varsa** ekle
+	[ -n "$(missingdeb $p)" ] || DEB_GNOME="$DEB_GNOME $p"
+done
+
+try=2
+while [ $try -gt 0 ]; do
+	err=0
+
+	say "Temel Deb paketleri kuruluyor..."
+	xaptitude install $DEB_BASE || err=$?
+
+	if ! anyattr server && anyattr gui fat; then
+		say "Standart bir çalışma ortamı için gerekli Deb paketleri kuruluyor..."
+		xaptitude install $DEB_STANDARD $DEB_GNOME || err=$?
+	fi
+	if anyattr fat; then
+		say "Ekstra Deb paketleri kuruluyor..."
+		xaptitude install $DEB_EXTRA $DEB_GNOME || err=$?
+	fi
+	if [ $err -ne 0 ]; then
+		cry "Bazı Deb paketlerin kurulumunda hata oluştu. " \
+		    "Tekrar denenerek kuruluma devam edilecek..."
+		try=$(expr $try - 1)
+		continue
+	fi
+	break
+done

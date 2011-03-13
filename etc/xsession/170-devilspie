@@ -1,0 +1,2 @@
+# Run devilspie just before spawning a terminal.
+anyattr no-fullscreen || [ -x /usr/bin/devilspie ] && /usr/bin/devilspie &

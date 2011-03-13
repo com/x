@@ -1,0 +1,46 @@
+# Yeni pencere açılırken o anki pencereni bulunduğu dizinde olmak istiyoruz.
+# Ayrıntılar için bakınız:
+#
+# 	http://tmux.cvs.sourceforge.net/viewvc/tmux/tmux/FAQ
+#
+# (TMUXPWD_* değişkeni de ayarlanmalı; bu şimdilik bash prompt dosyasında.)
+bind c run-shell 'tmux new-window -n sh "cd $(tmux display -p "\$TMUXPWD_#I"); exec bash"'
+
+# bağlam duyarlı yardım (ayrı pencerede)
+bind -n F1 run-shell 'exec x-tmux-man'
+# özel yardım
+bind -n S-F1 run-shell 'exec x-tmux-man 19-not'
+# midnight commander
+bind C new-window "exec mc"
+# htop
+bind H split-window -t 18 "exec htop"
+# log dosyası görüntüle
+bind L split-window -t 18 "exec x-tail"
+# ağ (bmon)
+bind N split-window -t 18 "exec bmon"
+# klasik top
+bind T split-window -t 18 "exec top -s -d 0.5"
+# ruby ri
+bind R command-prompt "split-window 'exec ri %%'"
+# ekranı kilitle
+bind X set lock-command '/usr/bin/vlock' \; lock-client \; set lock-command 'tput civis && read -s -n2'
+
+# Standart tuşlar ve programlar
+bind F1 run-shell "exec x-tmux-launch -t 11 -n posta -c mutt x-respawn mutt"
+bind F2 run-shell "exec x-tmux-launch -t 12 -n sohbet weechat-curses"
+bind F3 run-shell "LC_CTYPE=en_US.UTF-8 exec x-tmux-launch -t 13 -n müzik mocp -- -T moca_theme"
+bind F8 select-window -t 18
+bind F9 run-shell "exec x-tmux-launch -t 19 -n x x"
+
+# oturumlar arası geçiş
+bind q switchc -t 0
+bind w switchc -t 1
+bind e switchc -t 2
+
+# diğer tuşlar
+bind i choose-window
+bind b set status
+
+# screen uyumlu tuşlardan tehlikeli olanları çıkar
+unbind x
+unbind ^X

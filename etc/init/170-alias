@@ -1,0 +1,62 @@
+# "ls" için renk desteğini etkinleştir.
+[ -x /usr/bin/dircolors ] && [ -r ~/.dircolors ] &&
+	eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+alias ls='ls --color=auto'
+
+# "ls" kısayolları.
+alias ll='ls -l'
+alias la='ls -A'
+alias lc='ls -CF'
+alias lm='ls -al | less'
+
+# Grep kısayolları.
+alias egrep='egrep --color=tty -d skip'
+alias egrpe='egrep --color=tty -d skip'
+alias fgrep='fgrep --color=tty -d skip'
+alias fgrpe='fgrep --color=tty -d skip'
+alias grep='grep --color=tty -d skip'
+alias grpe='grep --color=tty -d skip'
+
+# Prosesler.
+alias px='ps aux'
+alias pg='ps aux | egrep'
+
+# Metin görüntüleyici.
+alias p="$PAGER"
+
+# Boyutlar daima "insani" olsun.
+alias du='du -kh'
+alias df='df -kTh'
+
+# "rm" komutu "-f" kullanılmadığı sürece güvenli.
+alias rm='rm -i'
+
+# Sudo.
+alias ~='sudo'
+
+# "cd" kısayolları.
+alias ..='cd ..'
+alias ...='cd ../..'
+alias cd..='cd ..'
+alias cd...='cd ../..'
+alias cd-='cd -'
+
+# Debian'a özgü kısayollar.
+alias api='apt-iselect'
+alias apt='sudo apt-get install'
+alias apu='sudo apt-get update'
+alias apk='~sudo /bin/apt-key-add'
+alias apc='apt-cache'
+alias aps='apt-get source'
+
+# Git.
+if hascommand hub && hascommand ruby; then
+	alias git=hub
+	alias g=hub
+else
+	alias g=git
+fi
+# 'g' için otomatik tamamlama desteği
+complete -o default -o nospace -F _git g
+# 'h' henüz olgunlaşmamış projeler için kısayol
+alias h='git commit -a -m hmm'

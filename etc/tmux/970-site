@@ -1,0 +1,2 @@
+# makineye özel ayarları oku
+if '[ -f $HOME/.tmux.site ]'     'source $HOME/.tmux.site'

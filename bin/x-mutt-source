@@ -1,0 +1,35 @@
+#!/bin/sh
+
+case " $X_ATTR " in
+*" dumb "*)
+	color=16
+	;;
+*)
+	if [ -z "$X_ATTR" ]; then
+		case "$(tty 2>/dev/null ||:)" in
+		/dev/tty*)
+			color=16
+			;;
+		esac
+	else
+		color=256
+	fi
+	;;
+esac
+
+[ -x /usr/bin/t-prot ] || notprot=yes
+
+for rc in $X/etc/mutt/[0-9]*; do
+	[ -r "$rc" ] || continue
+
+	case "$rc" in
+	*color${color}*) ;;
+	*color*) continue ;;
+	esac
+
+	case "$rc" in
+	*tprot*|*t-prot*) [ -z "$notprot" ] || continue ;;
+	esac
+
+	echo "source \"$rc\""
+done

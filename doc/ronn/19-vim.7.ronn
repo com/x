@@ -1,0 +1,61 @@
+# Vim Kılavuzu
+
+## AÇIKLAMA
+
+**Vim** ("Vi IMproved") çok güçlü bir programcı editörüdür.
+
+## KISAYOLLAR
+
+  * `ctrl-_`:
+    seçilen satırlarda açıklama ekle/kaldır
+  * `F9`:
+    kaynak dosyayı (ilgili programlama dili destekleniyorsa) derle
+  * `F10`:
+    kaynak dosyayı (ilgili programlama dili destekleniyorsa) çalıştır
+  * `F5`:
+    python kaynak dosyasının pep8 denetimini yap
+  * `ş`:
+    kursörün bulunduğu kelimeyi tüm dosyada bul ve değiştir
+
+## ÖRNEKLER
+
+TODO
+
+## EKLENTİLER
+
+TODO
+
+## YAPILANDIRMA
+
+**Vim** yapılandırmaları `~/.vimrc` dosyası ve `~/.vim` dizininde, **19/x**
+yapılandırma dosyaları `etc/vim` dizinindedir.  Kurulum sırasında kurulan VIM
+eklentileri `~/.vim/bundles` dizininde bulunabilir.
+
+Geniş kapsamlı olmayan özelleştirmelerinizi `etc/vim/local.vim` veya
+`etc/vim/after/plugin/local.vim` dosyalarında tutmanız önerilir.  **19/x**
+çalışma ortamının etkin kıldığı bir Vim ayarını, örneğin Vim renk temasını
+değiştirmek için ikincisini, yani `etc/vim/after/plugin/local.vim` dosyasını
+kullanmalısınız; aksi halde **19/x** üst geliştiricisi tarafından yapılan ayar
+kullanılacaktır.
+
+Yeni eklenti kurmak için `etc/vim/local` dosyasını kullanabilirsiniz.  Yeni
+eklenti kuracaksanız lütfen bunu depoya eklemeyin, sadece eklenti çoğaltma
+adresini dosyada bulundurun.  Çoğaltma adresi bu şekilde eklenen yeni bir
+eklentiyi kurmak veya mevcut eklentileri (varsa) yeni sürüme güncellemek için
+**19/x** menüsünde "Vim Eklentileri Kur" seçeneğini çalıştırın.
+
+## TELİF HAKKI
+
+Copyright (C) 2011 19 tayfası <http://ondokuz.biz/>
+
+## BAKINIZ
+
+Bu kılavuzda **19/x** kapsamında yapılan düzenlemeler özetlenmektedir.
+Programla ilgili daha ayrıntılı bilgi için lütfen aşağıdaki kaynaklara bakın.
+
+vim(1)
+
+**19/x** yapılandırma sistemi hakkında genel bilgi almak için lütfen şu
+kaynaklara bakın.
+
+19-xx(7)

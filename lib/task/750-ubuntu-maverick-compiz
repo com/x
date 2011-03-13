@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+
+version="1:0.8.6-0ubuntu12"
+
+if ! anyattr base server && hasdeb compiz; then
+	case "$(lsb_release -sc 2>/dev/null ||:)" in
+	[Mm]averick)
+		if hasolddeb compiz "$version"; then
+			problem=yes
+		fi
+		;;
+	esac
+fi
+
+[ -n "$problem" ] || noproblem
+
+cry "Dikkat!  Sisteminizde kurulu olan Compiz pencere yöneticisi" \
+    "bu sistemle uyumsuz olduğu bilinen bir sürümde.  Lütfen" \
+    "compiz paketinin asgari '$version' sürümünde olmasını" \
+    "sağlayın veya kurulumdan sonra Görünüm → Görsel Effektler" \
+    "sekmesine girerek Compiz'i devre dışı burakın."
+yesno "Bu uyarıları not aldınız mı?" e ||:

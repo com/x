@@ -1,0 +1,53 @@
+#!/bin/bash
+
+anyattr base server && skiptask "baz veya sunucu ortamı"
+
+# GNOME kurulu değilse çık
+hascommand gconftool-2 || skiptask "GNOME kurulu değil"
+
+# Yardım kısayolunu kaldır, F1 bize lazım
+gconftool-2 -t string -s \
+	/apps/gnome_settings_daemon/keybindings/help \
+	""
+# Pencereyi tam ekran yapmak için bir kısayol
+gconftool-2 -t string -s \
+	/apps/metacity/window_keybindings/toggle_fullscreen \
+	"<Ctrl><Alt>Return"
+# Tercih edilen uçbirim
+gconftool-2 -t string -s \
+	/desktop/gnome/applications/terminal/exec \
+	"xterm"
+# ... ve exec seçeneği
+gconftool-2 -t string -s \
+	/desktop/gnome/applications/terminal/exec_arg \
+	-- "-e"
+
+# Masaüstü resmi
+picture_filename=$PWD/doc/misc/19x.svg
+if [ -r "$picture_filename" ]; then
+	gconftool-2 -t string -s \
+		/desktop/gnome/background/picture_filename \
+		"$picture_filename"
+	gconftool-2 -t string -s \
+		/desktop/gnome/background/picture_options \
+		"zoom"
+fi
+
+# Guake ayarları
+if hascommand guake; then
+	gconftool-2 -t bool -s \
+		/apps/guake/general/use_login_shell \
+		true
+	gconftool-2 -t bool -s \
+		/apps/guake/general/use_scrollbar \
+		false
+	gconftool-2 -t bool -s \
+		/apps/guake/general/use_default_font \
+		false
+	gconftool-2 -t string -s \
+		/apps/guake/style/font/style \
+		"Terminus 14"
+	gconftool-2 -t int -s \
+		/apps/guake/style/background/transparency \
+		50
+fi

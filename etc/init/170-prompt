@@ -1,0 +1,76 @@
+# Renkler.
+CO_WHITE='\033[1;37m'
+CO_LIGHTGRAY='033[0;37m'
+CO_GRAY='\033[1;30m'
+CO_BLACK='\033[0;30m'
+CO_RED='\033[0;31m'
+CO_LIGHTRED='\033[1;31m'
+CO_GREEN='\033[0;32m'
+CO_LIGHTGREEN='\033[1;32m'
+CO_BROWN='\033[0;33m'
+CO_YELLOW='\033[1;33m'
+CO_BLUE='\033[0;34m'
+CO_LIGHTBLUE='\033[1;34m'
+CO_PURPLE='\033[0;35m'
+CO_PINK='\033[1;35m'
+CO_CYAN='\033[0;36m'
+CO_LIGHTCYAN='\033[1;36m'
+CO_DEFAULT='\033[0m'
+
+CO_111='\033[38;5;111m'
+CO_120='\033[38;5;120m'
+CO_198='\033[38;5;198m'
+CO_250='\033[38;5;250m'
+
+# Sanal konsollarda 16 renk kullan.
+if anyattr dumb; then
+	CO_111=$CO_LIGHTBLUE
+	CO_120=$CO_LIGHTGREEN
+	CO_198=$CO_PINK
+	CO_250=$CO_DEFAULT
+fi
+
+# Credits to Dave Vehrs.
+prompt_command() {
+	# Trim working dir to 1/4 the screen width.
+	local max_length=$((${COLUMNS-80}/4))
+	local trunc_symbol="..."
+
+	if [[ $PWD == $HOME* ]]; then
+		PPWD="~${PWD#$HOME}"
+	else
+		PPWD=$PWD
+	fi
+
+	if [ ${#PPWD} -gt $max_length ]; then
+		local offset=$(( ${#PPWD} - $max_length + 3 ))
+		PPWD="${trunc_symbol}${PPWD:$offset:$max_length}"
+	fi
+
+	PPWD="\[$CO_198\]$PPWD\[$CO_DEFAULT\]"
+
+	if [ -n "$SSH_CLIENT" ] || [ -n "$SSH2_CLIENT" ]; then
+		PHOST="\[$CO_LIGHTCYAN\]\h\[$CO_DEFAULT\]"
+	else
+		PHOST="\[$CO_111\]\h\[$CO_DEFAULT\]"
+	fi
+
+	if [ $UID -eq 0 ] ; then
+		PUSER="\[$CO_LIGHTRED\]\u\[$CO_DEFAULT\]"
+	else
+		PUSER="\[$CO_120\]\u\[$CO_DEFAULT\]"
+	fi
+
+	#GITBRANCH=$(__git_ps1 " (%s)")
+	#GITBRANCH="\[$CO_LIGHTRED\]$GITBRANCH\[$CO_DEFAULT\]"
+
+	#PS1="${debian_chroot:+($debian_chroot)}${PUSER}\[$CO_RED\]@\[$CO_DEFAULT\]$PHOST:$PPWD$GITBRANCH\$ "
+	PS1="${debian_chroot:+($debian_chroot)}${PUSER}\[$CO_198\]@\[$CO_DEFAULT\]$PHOST:$PPWD\[$CO_250\]\$\[$CO_DEFAULT\] "
+
+	# Hack for tmux.  See http://tmux.cvs.sourceforge.net/viewvc/tmux/tmux/FAQ
+	[ -z "$TMUX" ] || tmux setenv TMUXPWD_$(tmux display -p "#I") $PWD
+}
+
+# Komut istemini etkinleştir.
+export -f prompt_command
+export PROMPT_COMMAND=prompt_command

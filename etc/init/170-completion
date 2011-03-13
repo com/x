@@ -1,0 +1,4 @@
+# Komut tamamlamasını etkinleştir.
+if [ -z "$BASH_COMPLETION" ] && [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi

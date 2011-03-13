@@ -1,0 +1,7 @@
+#!/bin/bash
+
+turkishsetupprog="./bin/turkcele"
+[ -x "$turkishsetupprog" ] || die "$turkishsetupprog bulunamadı."
+
+sudoattempt
+sudo $turkishsetupprog

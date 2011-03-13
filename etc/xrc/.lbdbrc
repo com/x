@@ -1,0 +1,9 @@
+# ------------------------------------------------------------------------------
+# Little Brother's Database Yapılandırması
+# Özellikle Mutt'ta vCard'lardan adres eklemekte kullanılıyor
+# ------------------------------------------------------------------------------
+
+VCF_FILES=${X:=$HOME}/.private/contacts.vcf
+MUTT_DIRECTORY=${X:=$HOME}/.private
+MUTTALIAS_FILES="alias"
+METHODS="$METHODS m_muttalias m_vcf"

@@ -1,0 +1,90 @@
+#!/bin/bash
+
+anyattr base && skiptask "baz sistem"
+
+# ------------------------------------------------------------------------------
+# Her makinede (grafik ortam bulunmayan sunucular dahil) kurulacak paketler
+#
+# Dikkat!  Bu kategorideki Gem'lerin ağır bir bağımlılığı olmamalı.  Özellikle X
+# Window'a bağımlı hiçbir paket olmamalı.
+# ------------------------------------------------------------------------------
+
+GEM_BASE="
+bundler
+gist
+github
+git-pulls
+grit
+haml
+json
+mime-types
+octopussy
+thor
+ya2yaml
+"
+
+# ------------------------------------------------------------------------------
+# Tipik bir masaüstü ortamda kurulacak paketler
+#
+# Dikkat!  Bu kategoride graif ortamda çalışabilecek paketler olabilir.  Fakat
+# paket bağımlılığı sorunları azaltmak için karmaşık bağımlılığa sahip paketler
+# kurmaktan kaçının.
+# ------------------------------------------------------------------------------
+
+GEM_STANDARD="
+irbtools
+irbtools-more
+jekyll
+kramdown
+nokogiri
+ronn
+"
+
+# ------------------------------------------------------------------------------
+# Geliştirme ortamı olarak kullanacağımız bir makinede kurulacak ekstra paketler
+# ------------------------------------------------------------------------------
+
+GEM_EXTRA="
+gdata4ruby
+gdocs4ruby
+methopara
+rdp-arguments
+rvm
+"
+
+hascommand ruby1.9.1 || hascommand gem1.9.1 || hascommand ruby || hascommand gem || {
+	cry "Ruby kurulu değil."
+	exit 0
+}
+
+if ! anyattr server && anyattr gui &&
+   yesno "Ekstra Ruby Gem'leri kurulsun mu?" e; then
+	setattr fat
+fi
+
+sudoattempt
+
+try=2
+while [ $try -gt 0 ]; do
+	err=0
+
+	say "Temel Gem paketleri kuruluyor..."
+	xgem191 install $GEM_BASE || err=$?
+
+	if ! anyattr server && anyattr gui fat; then
+		say "Standart bir çalışma ortamı için gerekli Gem paketleri kuruluyor..."
+		xgem191 install $GEM_STANDARD || err=$?
+	fi
+	if anyattr fat; then
+		say "Geliştirici ortamı için gerekli ekstra Gem paketleri kuruluyor..."
+		xgem191 install $GEM_EXTRA || err=$?
+	fi
+
+	if [ $err -ne 0 ]; then
+		cry "Bazı Gem paketlerinin kurulumunda hata oluştu. " \
+		    "Tekrar denenerek kuruluma devam edilecek..."
+		try=$(expr $try - 1)
+		continue
+	fi
+	break
+done

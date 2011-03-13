@@ -1,0 +1,224 @@
+#!/bin/sh
+
+# Recai Oktaş <roktas@debian.org>
+# This file is in public domain.
+
+PROGNAME=${0##*/}
+DEFAULT_RESOLUTION=1024x768
+DEFAULT_DISPLAYNUM=2
+DEFAULT_COMMAND=twm
+
+run_server() {
+	local resolution="$1"
+	local displaynum="$2"
+	local command="$3"
+
+	echo >&2 "Resolution: $resolution"
+	echo >&2 "Display:    $displaynum"
+	echo >&2 "Command:    $command"
+
+	# Disable XKB extension, it (somehow) prevents using the current language layout.
+	Xephyr :$displaynum -screen $resolution -dpi 200 -auth xephyr-xauth -ac -br -reset -terminate &
+
+	DISPLAY=:$displaynum
+	export DISPLAY
+
+	if [ -n "$command" ]; then
+		sleep 1
+		$command &
+	fi
+
+	# The user may have xresource configurations.
+	for f in .xsessionrc .xprofile; do
+		if [ -f ~/$f ]; then
+			. ~/$f
+			break
+		fi
+	done
+}
+
+# portable which(1)
+hascommand() {
+	oldifs="$IFS"; IFS=':'
+	for _p in $PATH; do
+		if [ -x "$_p/$*" ] && [ -f "$_p/$*" ]; then
+			IFS="$oldifs"
+			return 0
+		fi
+	done
+	IFS="$oldifs"
+	return 1
+}
+
+is_displaynum_ok() {
+	if ! echo "$DISPLAY" | grep -q -- "^[^:]*:$1"; then
+		break
+	fi
+}
+
+if ! hascommand Xephyr; then
+	echo >&2 "Xephyr (içiçe X sunucusu) gerekiyor!"
+	exit 1
+fi
+
+if [ -z "$DISPLAY" ]; then
+	echo >&2 "DISPLAY tanımlı değil, X sunucusu çalışıyor mu?"
+	exit 1
+fi
+
+while getopts d:r:nh opt; do
+	case $opt in
+	d) DISPLAYNUM="$OPTARG" ;;
+	r) RESOLUTION="$OPTARG" ;;
+	n) noask=yes ;;
+	h) cat >&2 <<- EOF
+		Kullanım: $PROGNAME [seçenekler] komut
+		Seçenekler:
+		  -d           ekran no
+		  -r           çözünürlük
+		  -n           öntanımlı seçeneklerle devam et
+
+		  -h           yardım
+	EOF
+	   exit 2 ;;
+	*) exit 1 ;;
+	esac
+done
+shift $(($OPTIND - 1))
+
+COMMAND="$1"
+
+if [ "$noask" ]; then
+	RESOLUTION="${RESOLUTION:-$DEFAULT_RESOLUTION}"
+	DISPLAYNUM="${DISPLAYNUM:-$DEFAULT_DISPLAYNUM}"
+	COMMAND="${COMMAND:-$DEFAULT_COMMAND}"
+fi
+
+# Fast path.
+if [ -n "$RESOLUTION" ] && [ -n "$DISPLAYNUM" ] && [ -n "$COMMAND" ]; then
+	run_server "$RESOLUTION" "$DISPLAYNUM" "$COMMAND"
+	exit $?
+fi
+
+if hascommand zenity; then
+	ask_resolution() {
+		# FIXME: default should be selected from DEFAULT_RESOLUTION
+		zenity	--title="$PROGNAME" \
+			--text="$1" \
+			--list \
+			--column="Seç" \
+			--column="Seçenek" \
+			TRUE 1024x768 \
+			FALSE 800x600 \
+			FALSE 640x480 \
+			--radiolist
+	}
+	ask_display() {
+		zenity	--title="$PROGNAME" \
+			--text "$1" \
+			--scale \
+			--min-value=1 \
+			--max-value=100 \
+			--value=$DEFAULT_DISPLAYNUM \
+			--step 2 || return 1
+	}
+	ask_command() {
+		zenity	--title="$PROGNAME" \
+			--text "$1" \
+			--entry \
+			--entry-text "$DEFAULT_COMMAND"
+	}
+	warn() {
+		zenity	--title="$PROGNAME" \
+			--text "$1" \
+			--warning
+	}
+else
+	ask_resolution() {
+		choose_from_list	"$1" \
+					"1024x768 800x600 640x480" \
+					"$DEFAULT_RESOLUTION"
+		echo "$ANS"
+	}
+	ask_display() {
+		choose_from_list	"$1" \
+					"2 3 4 5 6 7 8 9" \
+					"$DEFAULT_DISPLAYNUM"
+		echo "$ANS"
+	}
+	ask_command() {
+		echo >&2 "$1"
+		printf >&2 "    [$DEFAULT_COMMAND]: "
+		read ANS
+		if [ ! "$ANS" ]; then
+			ANS="$DEFAULT_COMMAND"
+		elif [ "$ANS" == NONE ]; then
+			ANS=
+		fi
+		echo "$ANS"
+	}
+	warn() {
+		echo >&2 "$*"
+	}
+	# Stolen and modified from 'autoproject'.
+	choose_from_list() {
+		local query=$1
+		local choices=" $(echo $2) "
+		local default=$3
+		local finished=no
+
+		ANS=
+		while [ $finished != yes ]; do
+			echo >&2 "$1"
+			printf >&2 "    lütfen seçin: $choices [$default]: "
+
+			read ANS
+			if [ "$ANS" = "" ]; then ANS="$default"; fi
+			if echo "$choices" | grep -q -- " $ANS "; then
+				finished=yes
+			else
+				echo >&2 "    tanınmayan seçim $ANS"
+			fi
+		done
+	}
+fi
+
+if [ ! "$RESOLUTION" ]; then
+	RESOLUTION=$(
+		ask_resolution "Lütfen bir ekran çözünürlüğü seçin."
+	) || exit 1
+fi
+
+if [ ! "$DISPLAYNUM" ]; then
+	max=10
+	while [ $max -ge 0 ]; do
+		DISPLAYNUM=$(
+			ask_display "Lütfen bir ekran numarası seçin."
+		) || exit 1
+		if is_displaynum_ok "$DISPLAYNUM"; then
+			break
+		fi
+		warn "Ekran no $DISPLAYNUM zaten kullanılıyor, lütfen farklı bir ekran numarası seçin!"
+		max=$(($max - 1))
+	done
+fi
+
+if [ ! "$COMMAND" ]; then
+	if ! hascommand $DEFAULT_COMMAND; then
+		COMMAND=NONE
+	fi
+
+	max=10
+	while [ $max -ge 0 ]; do
+		COMMAND=$(
+			ask_command "Lütfen çalıştırılacak komutu girin."
+		) || exit 1
+		if [ ! "$COMMAND" ] || hascommand "$COMMAND"; then
+			break
+		fi
+		warn "$COMMAND komutu bulunamadı, lütfen başka bir komut girin!"
+		max=$(($max - 1))
+	done
+fi
+
+run_server "$RESOLUTION" "$DISPLAYNUM" "$COMMAND"

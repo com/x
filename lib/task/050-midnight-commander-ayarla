@@ -1,0 +1,28 @@
+#!/bin/bash
+
+MC_INI=.mc/ini
+
+mkdir -p $(dirname "$MC_INI")
+
+touchsafe "$MC_INI" 644
+
+cat >"$MC_INI" <<EOF
+[Midnight-Commander]
+show_backups=0
+show_dot_files=0
+use_internal_view=1
+use_internal_edit=0
+confirm_exit=0
+navigate_with_arrows=1
+confirm_exit=0
+
+[Layout]
+message_visible=0
+keybar_visible=0
+xterm_title=1
+command_prompt=1
+menubar_visible=0
+show_mini_info=1
+output_lines=0
+free_space=1
+EOF

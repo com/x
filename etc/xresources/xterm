@@ -1,0 +1,48 @@
+! -------------------------------------------------------------------------------------
+! ! VT100
+! -------------------------------------------------------------------------------------
+*VT100.font1            : -xos4-terminus-medium-r-normal--14-*-*-*-*-*-iso10646-1
+*VT100.font2            : -xos4-terminus-medium-r-normal--16-*-*-*-*-*-iso10646-1
+*VT100.font3            : -xos4-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+*VT100.font4            : -xos4-terminus-medium-r-normal--24-*-*-*-*-*-iso10646-1
+*VT100.font5            : -xos4-terminus-medium-r-normal--28-*-*-*-*-*-iso10646-1
+*VT100.font6            : -misc-fixed-medium-r-normal--20-200-75-75-c-100-iso10646-1
+*VT100.font             : -xos4-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+
+*VT100*background       : black
+*VT100*foreground       : white
+*VT100*colorULMode      : on
+*VT100*locale           : true
+
+! -------------------------------------------------------------------------------------
+! XTerm
+! -------------------------------------------------------------------------------------
+XTerm*font1             : -xos4-terminus-medium-r-normal--14-*-*-*-*-*-iso10646-1
+XTerm*font2             : -xos4-terminus-medium-r-normal--16-*-*-*-*-*-iso10646-1
+XTerm*font3             : -xos4-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+XTerm*font4             : -xos4-terminus-medium-r-normal--24-*-*-*-*-*-iso10646-1
+XTerm*font5             : -xos4-terminus-medium-r-normal--28-*-*-*-*-*-iso10646-1
+XTerm*font6             : -misc-fixed-medium-r-normal--20-200-75-75-c-100-iso10646-1
+XTerm*font              : -xos4-terminus-medium-r-normal--20-*-*-*-*-*-iso10646-1
+
+XTerm*geometry          : 120x36
+XTerm*background        : black
+XTerm*colorULMode       : on
+XTerm*eightBitInput     : true
+XTerm*foreground        : white
+XTerm*metaSendsEscape   : false
+XTerm*on2Clicks         : regex [^/@ \n]+
+XTerm*on3Clicks         : regex [^ \n]+
+XTerm*on4Clicks         : regex [^#$]+
+XTerm*on5Clicks         : line
+XTerm*scrollBar         : false
+XTerm*showMissingGlyphs : true
+*customization          : -color
+XTerm*termName          :  xterm-256color
+XTerm*utf8Title         : true
+
+! -------------------------------------------------------------------------------------
+! Rxvt
+! -------------------------------------------------------------------------------------
+rxvt*boldFont           : -xos4-terminus-bold-r-normal--20-*-*-*-*-*-iso10646-1
+rxvt.meta8              : true

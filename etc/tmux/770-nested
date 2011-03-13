@@ -1,0 +1,27 @@
+# İçiçe uçbirimlerle çalışırken kullanılan yapılandırma
+
+# Örneğin yerel makinedeki tmux oturumundan uzaktaki makineye SSH yaptığınızda
+# yereldeki tmux penceresi içinde uzaktaki tmux penceresi bulunacaktır.  Uzun
+# oturumlar için önerilmeyen bu çalışma yöntemi sunucularda çabucak bir işlem
+# yapmak için kullanılabilir.  Sunucuda ayrıntılı işlemler yapacaksanız yerelde
+# tmux çalıştırmadığınız bir uçbirimden (örneğin bir xterm konsolundan) uzaktaki
+# makineye erişmeniz daha doğru olacaktır.
+#
+# İçiçe iki tmux penceresi bulunması halinde daha rahat çalışabilmek için
+# aşağıdaki değişiklikleri yapıyoruz.  Dikkat!  tmux çalıştırılmayan bir yerel
+# uçbirimden açılan uzak tmux oturumlarında bu yapılandırma etkin değildir.
+# Bunun için *-ssh yapılandırmasını kullanın.
+
+# durum satırını kaldır (artık penceredeki durum satırı yerel makineye ait)
+set -g status off
+# tuş önekini değiştir aksi halde karışıklık çıkacak
+unbind C-a
+set -g prefix ^B
+bind b send-prefix
+unbind ^B
+# son kullanılan pencereye geçiş sık yapılan bir işlem
+bind ^B last-window
+# mesajların rengini daha belirgin yap
+set -g message-fg cyan
+# kısa bir hatırlatma
+display-message "Bu makinede uçbirim önek tuşu olarak <C-b> kullanabilirsiniz!"

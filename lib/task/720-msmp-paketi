@@ -1,0 +1,7 @@
+#!/bin/bash
+
+package="msmtp"
+version="1.4.22"
+problem="msmtp'nin eski sürümleri dışarıdan parola okunmasına izin vermiyor"
+
+updateproblematicpackage "$package" "$version" "$problem"

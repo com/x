@@ -1,0 +1,31 @@
+# öntanımlı statusbar renkleri
+set -g status-fg white
+set -g status-bg default
+set -g status-attr default
+
+# öntanımlı pencere başlık renkleri
+set-window-option -g window-status-fg default
+set-window-option -g window-status-bg default
+set-window-option -g window-status-attr dim
+set-window-option -g window-status-format "#I:#W#F"
+
+# etkin pencere başlık renkleri
+set-window-option -g window-status-current-fg white
+set-window-option -g window-status-current-bg default
+set-window-option -g window-status-current-attr bright
+# etkin pencere biçimi (pencere bayrağı için "#W"den "#[fg=colour198,bright]#F")
+set-window-option -g window-status-current-format " #[fg=magenta,bright]#I:#[fg=yellow,bright]#W#[fg=default] "
+
+# aktivite renkleri
+set-window-option -g window-status-alert-fg black
+set-window-option -g window-status-alert-bg white
+set-window-option -g window-status-alert-attr bright
+
+# pencere listesini ortala
+set -g status-justify centre
+
+# durum alanları
+set -g status-left "  #[fg=blue,bright]#(cut -d \" \" -f 1,2,3 </proc/loadavg)#[default]  "
+set -g status-left-length 50
+set -g status-right "  #[fg=blue,bright]%a %Y-%m-%d#[default] #[fg=yellow,bright]%H:%M#[default] #[fg=green][#H]#[fg=white,bg=black]  "
+set -g status-right-length 50

@@ -1,0 +1,2 @@
+# Sürüm takibine alınmayan geçici yapılandırmayı oku.
+[ ! -f ~/.bash_logout.site ] || . ~/.bash_logout.site

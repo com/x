@@ -1,0 +1,99 @@
+# Tmux Kılavuzu
+
+## AÇIKLAMA
+
+**tmux** bir oturum ekranı içinde birden fazla uçbirim oluşturmak ve bunlar
+arasında geçişler yapmak için tasarlanan bir uçbirim çoğullayıcısıdır ("Terminal
+Multiplexer").
+
+## KISAYOLLAR
+
+Aşağıda listelenen kısayollarda örneğin `c-a c` şeklinde gösterilen bir tuş
+kombinasyonu şu anlama gelmektedir: "Önce `Ctrl` tuşuyla birlikte `a` tuşuna
+(aynı anda) basın, peşinden (aynı anda değil) `c` tuşuna basın."  "`c-`" olarak
+gösterilen "`Ctrl`" tuşuna benzer şekilde "`s-`" gösterimi de "`Shift`" tuşunu
+temsil etmektedir.
+
+  * `c-a c`:
+    yeni uçbirim oluştur
+
+  * `c-a C`:
+    yeni uçbirimde mc(1) görsel kabuğunu çalıştır
+
+  * `f1`:
+    bağlam duyarlı kılavuz
+
+  * `s-f1`:
+    kişisel kılavuz (`19-not.7`)
+
+  * `c-a f1`:
+    posta okuyucuyu çalıştır veya çalışıyorsa ilgili pencereye ("`11`") geç
+
+  * `c-a f2`:
+    sohbet programını çalıştır veya çalışıyorsa ilgili pencereye ("`12`") geç
+
+  * `c-a f3`:
+    müzik çaları çalıştır veya çalışıyorsa ilgili pencereye ("`13`") geç
+
+  * `c-a f8`:
+    servis/sistem göstergelerinin bulunduğu pencereye ("`18`") geç
+
+  * `c-a f9`:
+    **19/x** menüsünü çalıştır veya çalışıyorsa ilgili pencereye ("`18`") geç
+
+  * `c-a a`:
+    bir önceki etkin uçbirime geçiş yap
+
+  * `c-a` **N**:
+    pencere numarası **N** olan uçbirime geçiş yap
+
+  * `c-a X`:
+    uçbirimi kilitle
+
+  * `c-a k`:
+    etkin pencereyi kapanmaya zorla ("kill")
+
+  * `c-a %`:
+    pencereyi dikey olarak böl ve kabuk çalıştır
+
+  * `c-a ?`:
+    klavye kısayollarını listele
+
+  * `c-a tab`:
+    aynı ekranda dikey veya yatay olarak döşenmiş pencereler arasında geçiş yap
+
+  * `c-a :`:
+    tmux komut istemi
+
+  * `c-a space`:
+    bir sonraki pencereye geç
+
+  * `c-a d`:
+    oturum ayır (tmux tekrar çalıştırıldığında oturum kaldığı yerden devam eder)
+
+  * `c-a [`:
+    kopyalama kipine geç (ok tuşlarıyla hareket edilebilir)
+
+  * `c-a ]`:
+    yapıştırma kipine geç
+
+## YAPILANDIRMA
+
+Yapılandırma dosyaları `etc/tmux`, **tmux** profilleri `~/.tmux`
+dizinlerindedir.
+
+## TELİF HAKKI
+
+Copyright (C) 2011 19 tayfası <http://ondokuz.biz/>
+
+## BAKINIZ
+
+Bu kılavuzda **19/x** kapsamında yapılan düzenlemeler özetlenmektedir.
+Programla ilgili daha ayrıntılı bilgi için lütfen aşağıdaki kaynaklara bakın.
+
+tmux(1)
+
+**19/x** yapılandırma sistemi hakkında genel bilgi almak için lütfen şu
+kaynaklara bakın.
+
+19-x(7)

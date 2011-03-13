@@ -1,0 +1,71 @@
+#!/usr/bin/ruby
+# encoding: utf-8
+
+# Ronn ile Türkçeye uyarlanmış kılvavuz (man) dosyası üret
+
+require 'optparse'
+
+PROGNAME = File.basename($0)
+
+OPTIONS = {
+  :force  => false,
+  :output => nil,
+
+}
+
+ARGV.options do |opt|
+  opt.set_summary_indent('  ')
+  opt.banner = "Kullanım: #{PROGNAME} [SEÇENEKLER] [DOSYA]"
+  opt.define_head "Ronn ile Türkçeye uyarlanmış kılvavuz (man) dosyası üret"
+
+  opt.separator ""
+
+  opt.on(
+    "-o", "--output=DOSYA", String,
+    "Çıkış dosyası"
+  ) { |f| OPTIONS[:output] = f }
+
+  opt.on(
+    "-f", "--force", "Mevcut bir çıkış dosyasının üzerine yaz"
+  ) { OPTIONS[:force] = true }
+
+  opt.on_tail(
+    "-h", "--help", "Bu yardımı göster"
+  ) { puts opt; exit }
+
+  opt.parse!
+end
+
+inf  = ARGV[0] || '-'
+
+outf = OPTIONS[:output] || (inf != '-' ? inf.sub(/\.[^.]*$/, '') : nil)
+
+if outf && File.exists?(outf) && ! OPTIONS[:force]
+  $stderr.puts "Çıkış dosyası #{outf} zaten var."
+  $stderr.puts "Üzerine yazmak için Lütfen '-f' seçeneğini kullanın."
+  exit 1
+end
+
+lines = IO.popen(%Q(ronn -w -r #{inf} --pipe)).readlines
+
+content = (
+  lines[0...10].map do | line|
+    line.sub!(/^[.]SH\s+"NAME"/, ".SH \"İSİM\"")
+    if r = /^[.]TH\s+.*"(
+      January | February | March     | April   | May      | June    |
+      July    | August   | September | October | November | December
+    )\s+\d{4}"/x.match(line)
+      line.sub!(r[1], {
+          "January"   => "Ocak",   "February"  => "Şubat",
+          "March"     => "Mart",   "April"     => "Nisan",
+          "May"       => "Mayıs",  "June"      => "Haziran",
+          "July"      => "Temmuz", "August"    => "Ağustos",
+          "September" => "Eylül",  "October"   => "Ekim",
+          "November"  => "Kasım",  "December"  => "Aralık",
+      }[r[1]])
+    end
+    line
+  end + lines[10..-1]
+).join
+
+outf ? File.open(outf, 'w') { |f| f.write(content) } : puts(content)

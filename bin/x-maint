@@ -1,0 +1,83 @@
+#!/bin/bash
+
+SHLIBDIR=lib/sh
+PROG=bin/x
+RELEASE=index.html
+BRANCH=gh-pages
+
+generate() {
+	local in out
+
+	in="$1"; out="$2"
+
+	say "$out üretiliyor..."
+	awk '
+		/^[ \t]*###+ / {
+			lead = $0; sub(/[^ \t].*$/, "", lead)
+			t = "'"$SHLIBDIR"'/"$2
+			while (getline line < t > 0)
+				print lead line
+			next
+		}
+		{ print }
+	' <"$in" >"$out"
+
+	chmod +x "$out"
+	if ! /bin/bash -n "$out"; then
+		rm -f "$out"
+		die "$out betiğinde bash sözdizimi hatası"
+	fi
+}
+
+release() {
+	local in out
+
+	in="$1"; out="$2"; branch="$3"; release="$4"
+
+	say "$out yayınlanıyor..."
+
+	callback() {
+		git show master:"$out" >"$release"
+		git commit "$release" \
+			-m "$(egrep -v '^#' .git/COMMIT_EDITMSG)"
+	}
+
+	if git commit "$in" "$out"; then
+		git_on_branch "$branch" callback
+	fi
+}
+
+if ! up="$(git rev-parse --show-cdup 2>/dev/null)"; then
+	echo >&2 "Çalışma dizini bir git deposu değil"
+	exit 1
+fi
+[ -z "$up" ] || cd "$up"
+
+if [ ! -d $SHLIBDIR ]; then
+	echo >&2 "$SHLIBDIR dizini bulunamadı"
+	exit 1
+fi
+
+export SHLIBDIR
+
+. $SHLIBDIR/core.sh
+. $SHLIBDIR/std.sh
+. $SHLIBDIR/git.sh
+
+if [ -n "$X" ]; then
+	case "$(readlink -f $X)" in
+	$PWD)
+		if ! yesno "19/x kurulumuyla gelen $PROG betiğini güncellemek üzeresiniz.  Devam?" h; then
+			exit
+		fi
+	;;
+	esac
+fi
+
+if [ -f "${PROG}.in" ]; then
+	if generate "${PROG}.in" "$PROG" && has '-r' "$@"; then
+		release "${PROG}.in" "$PROG" "$BRANCH" "$RELEASE"
+	fi
+else
+	die "${PROG}.in bulunamadı."
+fi

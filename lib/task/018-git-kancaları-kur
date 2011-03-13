@@ -1,0 +1,38 @@
+#!/bin/bash
+
+PRECOMMIT=.git/hooks/pre-commit
+
+# Gizli dizinlerin eklenmemesi için ekstra önlem.  gitignore dahil her şey var
+# ama yine de...
+
+# Önce dosyayı oluştur
+touchsafe "$PRECOMMIT" +x
+
+cat >"$PRECOMMIT" <<'EOF'
+#!/bin/sh
+
+forbidden='^(.private|.ssh|.gnupg|Mail|mail)/$'
+
+if git rev-parse --verify HEAD >/dev/null 2>&1; then
+	against=HEAD
+else
+	# Initial commit: diff against an empty tree object
+	against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
+if git diff --cached --name-only --diff-filter=A $against |
+   LC_ALL=C egrep -q "$forbidden"; then
+	echo "Hata: Şu dizinlerden birini depoya eklemeye çalışıyorsunuz:"
+	echo
+	echo $forbidden
+	echo
+	echo "Gizli kalması gereken dosyaları depoya eklememelisiniz."
+	echo "Engellemeyi gereksiz buluyorsanız şu betiği silin:"
+	echo
+	echo "    $0"
+	echo
+	exit 1
+fi
+
+exec git diff-index --check --cached $against --
+EOF

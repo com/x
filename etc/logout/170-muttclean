@@ -1,0 +1,6 @@
+# Geçici mutt dosyalarını sıfırla.
+for f in $HOME/.mutt/.cache/*; do
+	if [ -f "$f" ] && ! [ -L "$f" ]; then
+		:>"$f"
+	fi
+done

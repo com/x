@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -n "$X_REPOSITORY" ]; then
+	cd "$X_REPOSITORY"
+fi
+
+hascommand tig && exec tig
+git log --graph --decorate --pretty=oneline --abbrev-commit

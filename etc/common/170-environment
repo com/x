@@ -1,0 +1,11 @@
+[ -n "$EDITOR" ] || EDITOR=/usr/bin/vim
+[ -n "$VISUAL" ] || VISUAL="$EDITOR"
+[ -n "$PAGER"  ] || PAGER=/usr/bin/less
+
+LESS=-RX
+DH_ALWAYS_EXCLUDE=CVS:.svn:.git:.hg
+
+export EDITOR VISUAL PAGER LESS DH_ALWAYS_EXCLUDE
+
+# Git değişkenlerini anons et.
+exportgit

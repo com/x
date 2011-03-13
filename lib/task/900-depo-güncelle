@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [ -n "$X_REPOSITORY" ]; then
+	cd "$X_REPOSITORY"
+fi
+
+git pull upstream master
