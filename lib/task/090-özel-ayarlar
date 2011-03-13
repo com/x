@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Üyeye özel kurulum betiği.   Bu betik üye depoyu her çoğalttığında (son
+# aşamada) çalışır.  Betikte kullanabileceğiniz pek çok değişken ve işlev
+# vardır.  Bunları görmek için lütfen ana kurulum betiğini ve ne şekilde
+# kullanıldığını anlamak için ise diğer kurulum betiklerini inceleyin.
+
+# Dikkat!  Ekstra Debian ve Ruby Gem paketi kurulumu dışında lütfen bu betikte
+# yönetici hakları (yani sudo kullanımı) gerektiren işlemlerden KAÇININ!  Sistem
+# genelinde yapacağınız değişiklikler pek çok soruna yol açabilir.

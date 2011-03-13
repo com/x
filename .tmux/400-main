@@ -1,0 +1,9 @@
+# ------------------------------------------------------------------------------
+# Ana çalışma makinelerinde kullanılan düzen
+# ------------------------------------------------------------------------------
+
+# OfflineIMAP
+new-window "exec x-tmux-launch -t 18 -n gösterge -c offlineimap x-respawn offlineimap"
+
+# Mutt
+new-window "exec x-tmux-launch -t 11 -n posta -c mutt x-respawn mutt"

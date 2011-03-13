@@ -1,0 +1,1 @@
+etc/xrc/.bash_logout

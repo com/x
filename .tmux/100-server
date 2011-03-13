@@ -1,0 +1,10 @@
+# ------------------------------------------------------------------------------
+# Sunucularda kullanılan düzen
+# ------------------------------------------------------------------------------
+
+# Son pencere monitörleme için, bazı log dosyalarını izle
+#new-window -n gösterge -t 18 "exec x-tail"
+# Htop varsa çalıştır
+#if '[ -x /usr/bin/htop ]' 'split-window -t 18 "exec htop"'
+# Pencereyi asla kapatma
+#set -w -t 18 remain-on-exit
